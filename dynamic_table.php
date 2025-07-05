@@ -24,6 +24,20 @@ if (!function_exists('normalizeKey')) {
     }
 }
 
+$_SESSION['dirty']     = $_SESSION['dirty']     ?? false;
+$_SESSION['approved']  = $_SESSION['approved']  ?? false;
+
+/* ---------- clic en Aprobación ---------- */
+if (isset($_GET['approve'])) {
+    $_SESSION['dirty']    = false;
+    $_SESSION['approved'] = true;
+    header('Location: dynamic_table.php?sent=1');
+    exit;
+}
+
+$btnApproveDisabled = $_SESSION['dirty']     ? '' : 'disabled';
+$btnResumenDisabled = $_SESSION['approved']  ? '' : 'disabled';
+
 /* -------- CONFIG ---------------- */
 $default_headers = [
     'Socio',
@@ -305,10 +319,11 @@ $types   = &$_SESSION['types'];
         </div>
 
         <div class="group">
-            <button id="approveBtn">Enviar para Aprobación</button>
-            <button id="sendResumenBtn" <?= empty($_SESSION['approved']) ? 'disabled' : '' ?>>Enviar Resumen</button>
+            <button id="approveBtn" <?= $btnApproveDisabled ?>>Enviar para Aprobación</button>
+            <button id="sendResumenBtn" <?= $btnResumenDisabled ?>>Enviar Resumen</button>
         </div>
     </div>
+
 
     <!-- ---------------- TABLA ------------------------------- -->
     <div class="container">
@@ -372,20 +387,24 @@ $types   = &$_SESSION['types'];
 
     <!-- --------------- JS ---------------------------------- -->
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.location.search);
 
-        if (urlParams.has('approved')) {
-            document.getElementById('successModal').classList.add('active');
-            document.getElementById('sendResumenBtn').disabled = false;
-        }
         document.getElementById('approveBtn').onclick = () => {
-            const obra = urlParams.get('obra_social') || '';
+            if (document.getElementById('approveBtn').disabled) return;
+            const obra = params.get('obra_social') || '';
             location.href = `dynamic_table.php?obra_social=${encodeURIComponent(obra)}&approve=1`;
         };
+
+        /* mostrar modal si acabamos de aprobar */
+        if (params.has('sent')) {
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        /* cerrar modal y limpiar ?sent de la url */
         document.getElementById('closeModal').onclick = () => {
             document.getElementById('successModal').classList.remove('active');
-            const obra = urlParams.get('obra_social') || '';
-            history.replaceState(null, '', `dynamic_table.php?obra_social=${encodeURIComponent(obra)}`);
+            params.delete('sent');
+            history.replaceState(null, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
         };
 
         /* Import modal */
