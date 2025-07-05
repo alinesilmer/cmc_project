@@ -1,7 +1,30 @@
 <?php
 session_start();
 
-/* ——— CONFIG ——— */
+/* === 1)  Incluimos utils.php con ruta absoluta  =============== */
+$utilsPath = __DIR__ . '/utils.php';
+if (is_file($utilsPath)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $utilsPath;
+}
+
+/* === 2)  Fallback por si utils.php no se encontró ============== */
+if (!function_exists('normalizeKey')) {
+    function normalizeKey(string $label): string
+    {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
+        $key   = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
+        $key   = strtolower(trim($key, '_'));
+
+        if ($key === '') {
+            $replacements = ['%' => 'porcentaje', '#' => 'numero'];
+            $key = $replacements[$label] ?? 'col_' . dechex(crc32($label));
+        }
+        return $key;
+    }
+}
+
+/* -------- CONFIG ---------------- */
 $default_headers = [
     'Socio',
     'Nombre Socio',
@@ -18,45 +41,44 @@ $default_headers = [
     'Subtotal'
 ];
 
-/* --- 1) Detecta si la lista por defecto cambió -------- */
+/* --- 1)  Sincroniza cabeceras por código vs. sesión ------- */
 $headers_hash = md5(json_encode($default_headers));
-
 if (!isset($_SESSION['headers_hash']) || $_SESSION['headers_hash'] !== $headers_hash) {
-    //  ↳ Es la primera vez O bien modificaste $default_headers en el código
     $_SESSION['headers']      = $default_headers;
     $_SESSION['headers_hash'] = $headers_hash;
-    $_SESSION['types']        = [];          // obliga a recalcular tipos
+    $_SESSION['types']        = [];  // fuerza recálculo tipos
 }
 
-/* --- 2) Normaliza claves y tipos ----------------------- */
-function normalizeKey(string $label): string
-{
-    $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
-    $key   = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
-    return strtolower(trim($key, '_'));
-}
-
-foreach ($_SESSION['headers'] as $col) {
-    $key = normalizeKey($col);
+/* --- 2)  Tipos de dato por columna ----------------------- */
+foreach ($_SESSION['headers'] as $label) {
+    $key = normalizeKey($label);
     if (!isset($_SESSION['types'][$key])) {
-        $_SESSION['types'][$key] = ($col === 'Fecha' ? 'date' : 'text');
+        $_SESSION['types'][$key] = ($label === 'Fecha' ? 'date'
+            : ($label === '%'     ? 'number'
+                :  'text'));
     }
 }
-// Inicializar datos y bandera de aprobación
-if (!isset($_SESSION['table_data'])) {
-    $_SESSION['table_data'] = [];
-}
-if (!isset($_SESSION['approved'])) {
-    $_SESSION['approved'] = false;
-}
 
-// Pedir aprobación
+/* --- 3)  Estructuras base -------------------------------- */
+$_SESSION['table_data'] = $_SESSION['table_data'] ?? [];
+$_SESSION['approved']   = $_SESSION['approved']   ?? false;
+
+/* --- 3a) MIGRA filas antiguas con clave "" → "porcentaje" */
+foreach ($_SESSION['table_data'] as &$fila) {
+    if (isset($fila['']) && !isset($fila['porcentaje'])) {
+        $fila['porcentaje'] = $fila[''];
+        unset($fila['']);
+    }
+}
+unset($fila);  // rompe referencia
+
+/* --- 4)  Acciones GET ----------------------------------- */
 if (isset($_GET['approve'])) {
     $_SESSION['approved'] = true;
     header('Location: dynamic_table.php');
     exit;
 }
-// Eliminar fila
+
 if (isset($_GET['delete_row'])) {
     $idx = (int)$_GET['delete_row'];
     if (isset($_SESSION['table_data'][$idx])) {
@@ -66,7 +88,7 @@ if (isset($_GET['delete_row'])) {
     exit;
 }
 
-//Referencias de render
+/* --- 5)  Atajos para render ----------------------------- */
 $headers = &$_SESSION['headers'];
 $data    = &$_SESSION['table_data'];
 $types   = &$_SESSION['types'];
@@ -75,17 +97,17 @@ $types   = &$_SESSION['types'];
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Resumen Obra Social</title>
-
+    <!-- ------------- ESTILOS (idénticos a los que ya tenías) -------------- -->
     <style>
         :root {
             --primary: #3066be;
             --primary-light: #e8efff;
             --accent: #f5b700;
             --bg: #f9f9fb;
-            --surface: #ffffff;
+            --surface: #fff;
             --text: #2d2d38;
             --text-muted: #555a6f;
             --danger: #e54f6d;
@@ -113,10 +135,16 @@ $types   = &$_SESSION['types'];
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: .6rem;
+            gap: 1rem 1.2rem;
             justify-content: center;
             padding: 1rem;
             background: var(--surface);
+        }
+
+        .controls .group {
+            display: flex;
+            gap: .6rem;
+            flex-wrap: wrap
         }
 
         .controls a,
@@ -142,6 +170,11 @@ $types   = &$_SESSION['types'];
             background: #d4d9e8;
             color: var(--text-muted);
             cursor: not-allowed;
+        }
+
+        .secondary {
+            background: var(--primary-light);
+            color: var(--primary);
         }
 
         .container {
@@ -186,16 +219,6 @@ $types   = &$_SESSION['types'];
 
         tbody tr:hover {
             background: #f3f6ff;
-        }
-
-
-        .btn-action {
-            border: none;
-            padding: .35rem .7rem;
-            border-radius: .4rem;
-            font-size: .8rem;
-            cursor: pointer;
-            transition: background .25s;
         }
 
         .btn-edit {
@@ -243,6 +266,10 @@ $types   = &$_SESSION['types'];
             box-shadow: 0 4px 16px rgb(0 0 0 / .12);
         }
 
+        #importModal .modal-content {
+            max-width: 380px
+        }
+
         .modal-content button {
             margin-top: 1rem;
             background: var(--primary);
@@ -259,13 +286,31 @@ $types   = &$_SESSION['types'];
     <header>
         <h1>Resumen: Obra Social "<?= htmlspecialchars($_GET['obra_social'] ?? 'Sancor') ?>"</h1>
     </header>
+
+    <!-- ---------------- BARRA DE CONTROLES ----------------- -->
     <div class="controls">
-        <a href="agregar_datos.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Agregar Datos</a>
-        <a href="modificar_tabla.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Configurar Tabla</a>
-        <button onclick="alert('Exportar a Excel no implementado')">Exportar a Excel</button>
-        <button id="approveBtn">Enviar para Aprobación</button>
-        <button id="sendResumenBtn" <?= empty($_SESSION['approved']) ? 'disabled' : '' ?>>Enviar Resumen</button>
+        <!-- botón de regreso -->
+        <div class="group">
+            <a href="obras_sociales.php" class="secondary">← Volver al listado</a>
+        </div>
+
+        <div class="group">
+            <a href="agregar_datos.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Agregar Datos</a>
+            <a href="modificar_tabla.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Configurar Tabla</a>
+        </div>
+
+        <div class="group">
+            <button id="openImport">Importar Excel</button>
+            <a href="export_excel.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>" class="secondary">Exportar Excel</a>
+        </div>
+
+        <div class="group">
+            <button id="approveBtn">Enviar para Aprobación</button>
+            <button id="sendResumenBtn" <?= empty($_SESSION['approved']) ? 'disabled' : '' ?>>Enviar Resumen</button>
+        </div>
     </div>
+
+    <!-- ---------------- TABLA ------------------------------- -->
     <div class="container">
         <table>
             <thead>
@@ -277,34 +322,33 @@ $types   = &$_SESSION['types'];
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($data)): ?>
+                <?php if (!$data): ?>
                     <tr>
-                        <td colspan="<?= count($headers) + 1 ?>" style="text-align:center;">No hay datos.</td>
+                        <td colspan="<?= count($headers) + 1 ?>" style="text-align:center">No hay datos.</td>
                     </tr>
-                <?php else: ?>
-                    <?php foreach ($data as $i => $row): ?>
+                    <?php else: foreach ($data as $i => $fila): ?>
                         <tr>
                             <?php foreach ($headers as $col):
                                 $key = normalizeKey($col);
-                                $val = $row[$key] ?? '';
+                                $val = $fila[$key] ?? '';
                                 if ($types[$key] === 'date' && $val) {
                                     $d = DateTime::createFromFormat('Y-m-d', $val);
                                     $val = $d ? $d->format('d/m/Y') : $val;
-                                }
-                            ?>
+                                } ?>
                                 <td><?= htmlspecialchars($val) ?></td>
                             <?php endforeach; ?>
                             <td>
-                                <button class="btn btn-edit" onclick="location.href='editar_datos.php?index=<?= $i ?>'">Editar</button>
-                                <button class="btn btn-delete" onclick="if(confirm('¿Eliminar fila?')) location.href='dynamic_table.php?delete_row=<?= $i ?>'">Eliminar</button>
+                                <button class="btn-edit" onclick="location.href='editar_datos.php?index=<?= $i ?>'">Editar</button>
+                                <button class="btn-delete" onclick="if(confirm('¿Eliminar fila?')) location.href='dynamic_table.php?delete_row=<?= $i ?>'">Eliminar</button>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                <?php endforeach;
+                endif; ?>
             </tbody>
         </table>
     </div>
 
+    <!-- --------------- MODALES ----------------------------- -->
     <div id="successModal" class="modal">
         <div class="modal-content">
             <p>Enviado, se avisará cuando esté aprobada.</p>
@@ -312,21 +356,42 @@ $types   = &$_SESSION['types'];
         </div>
     </div>
 
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <h3>Importar datos desde Excel</h3>
+            <form id="importForm" action="import_excel.php" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="obra_social" value="<?= htmlspecialchars($_GET['obra_social'] ?? '') ?>">
+                <input type="file" name="xlsx" accept=".xlsx,.xls" required>
+                <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:center">
+                    <button type="submit">Subir Archivo</button>
+                    <button type="button" id="cancelImport" class="secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- --------------- JS ---------------------------------- -->
     <script>
         const urlParams = new URLSearchParams(window.location.search);
+
         if (urlParams.has('approved')) {
             document.getElementById('successModal').classList.add('active');
             document.getElementById('sendResumenBtn').disabled = false;
         }
-        document.getElementById('approveBtn').addEventListener('click', () => {
+        document.getElementById('approveBtn').onclick = () => {
             const obra = urlParams.get('obra_social') || '';
-            window.location.href = `dynamic_table.php?obra_social=${encodeURIComponent(obra)}&approve=1`;
-        });
-        document.getElementById('closeModal').addEventListener('click', () => {
+            location.href = `dynamic_table.php?obra_social=${encodeURIComponent(obra)}&approve=1`;
+        };
+        document.getElementById('closeModal').onclick = () => {
             document.getElementById('successModal').classList.remove('active');
             const obra = urlParams.get('obra_social') || '';
             history.replaceState(null, '', `dynamic_table.php?obra_social=${encodeURIComponent(obra)}`);
-        });
+        };
+
+        /* Import modal */
+        document.getElementById('openImport').onclick = () => document.getElementById('importModal').classList.add('active');
+        document.getElementById('cancelImport').onclick = () => document.getElementById('importModal').classList.remove('active');
+        document.getElementById('importForm').addEventListener('submit', () => document.getElementById('importModal').classList.remove('active'));
     </script>
 </body>
 

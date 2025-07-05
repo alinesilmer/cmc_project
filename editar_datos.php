@@ -1,15 +1,29 @@
 <?php
 session_start();
 
-function normalizeKey(string $label): string
-{
-    $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
-    $key   = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
-    return strtolower(trim($key, '_'));
+/* 1) Incluimos utils.php con ruta absoluta */
+$utils = __DIR__ . '/utils.php';
+if (is_file($utils)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $utils;
+}
+/* 1-bis) Fallback si utils.php no existe */
+if (!function_exists('normalizeKey')) {
+    function normalizeKey(string $label): string
+    {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
+        $key   = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
+        $key   = strtolower(trim($key, '_'));
+        if ($key === '') {
+            $key = $label === '%' ? 'porcentaje' : 'col_' . dechex(crc32($label));
+        }
+        return $key;
+    }
 }
 
-$headers = &$_SESSION['headers'];
-$types   = &$_SESSION['types'];
+/* 2) Datos de sesión */
+$headers = $_SESSION['headers'] ?? [];
+$types   = $_SESSION['types']   ?? [];
 $index   = isset($_GET['index']) ? (int)$_GET['index'] : null;
 
 if ($index === null || !isset($_SESSION['table_data'][$index])) {
@@ -17,16 +31,16 @@ if ($index === null || !isset($_SESSION['table_data'][$index])) {
     exit;
 }
 
+/* 3) Limpiar fila */
 if (isset($_GET['clear'])) {
     foreach ($headers as $col) {
-        $key = normalizeKey($col);
-        $_SESSION['table_data'][$index][$key] = '';
+        $_SESSION['table_data'][$index][normalizeKey($col)] = '';
     }
     header('Location: editar_datos.php?index=' . $index);
     exit;
 }
 
-// Enviar formulario
+/* 4) Guardar cambios */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($headers as $col) {
         $key = normalizeKey($col);
@@ -42,8 +56,8 @@ $row = $_SESSION['table_data'][$index];
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Editar Datos</title>
     <style>
         :root {
@@ -53,13 +67,11 @@ $row = $_SESSION['table_data'][$index];
             --bg: #f9f9fb;
             --surface: #ffffff;
             --text: #2d2d38;
-            --text-muted: #555a6f;
-            --danger: #e54f6d;
         }
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             background: var(--bg);
             color: var(--text);
         }
@@ -67,21 +79,21 @@ $row = $_SESSION['table_data'][$index];
         .form-wrapper {
             max-width: 700px;
             margin: 2rem auto;
-            background: var(--white);
+            background: var(--surface);
             padding: 2rem;
             border-radius: .5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgb(0 0 0 / .1);
         }
 
         h2 {
-            margin-top: 0;
+            margin: 0 0 1rem;
             color: var(--primary);
         }
 
         label {
             display: block;
             margin: 1rem 0;
-            font-weight: bold;
+            font-weight: 600;
         }
 
         input {
@@ -109,7 +121,7 @@ $row = $_SESSION['table_data'][$index];
 
         .btn-save {
             background: var(--primary);
-            color: var(--white);
+            color: #fff;
         }
 
         .btn-save:hover {
@@ -118,7 +130,7 @@ $row = $_SESSION['table_data'][$index];
 
         .btn-clear {
             background: #ffa000;
-            color: var(--white);
+            color: #fff;
         }
 
         .btn-clear:hover {
@@ -130,19 +142,26 @@ $row = $_SESSION['table_data'][$index];
 <body>
     <div class="form-wrapper">
         <h2>Editar Datos</h2>
+
         <form method="POST" action="editar_datos.php?index=<?= $index ?>">
             <?php foreach ($headers as $col):
-                $key = normalizeKey($col);
-                $typeAttr = isset($types[$key]) && $types[$key] === 'number'
-                    ? 'number' : (isset($types[$key]) && $types[$key] === 'date' ? 'date' : 'text');
+                $key   = normalizeKey($col);
+                $type  = $types[$key] ?? 'text';
+                $htmlT = $type === 'number' ? 'number' : ($type === 'date' ? 'date' : 'text');
                 $value = htmlspecialchars($row[$key] ?? '');
             ?>
-                <label for="<?= $key ?>"><?= htmlspecialchars($col) ?>:</label>
-                <input id="<?= $key ?>" type="<?= $typeAttr ?>" name="<?= $key ?>" value="<?= $value ?>" placeholder="<?= $typeAttr === 'date' ? 'YYYY-MM-DD' : '' ?>" />
+                <label for="<?= $key ?>"><?= htmlspecialchars($col) ?>:
+                    <input id="<?= $key ?>" name="<?= $key ?>" type="<?= $htmlT ?>" value="<?= $value ?>"
+                        placeholder="<?= $htmlT === 'date' ? 'YYYY-MM-DD' : '' ?>">
+                </label>
             <?php endforeach; ?>
+
             <div class="actions">
                 <button type="submit" class="btn btn-save">Guardar Cambios</button>
-                <button type="button" class="btn btn-clear" onclick="if(confirm('Limpiar esta fila?')) location.href='editar_datos.php?index=<?= $index ?>&clear=1'">Limpiar Fila</button>
+                <button type="button" class="btn btn-clear"
+                    onclick="if(confirm('Limpiar esta fila?')) location.href='editar_datos.php?index=<?= $index ?>&clear=1'">
+                    Limpiar Fila
+                </button>
             </div>
         </form>
     </div>

@@ -1,29 +1,49 @@
 <?php
 session_start();
 
-function normalizeKey(string $label): string
-{
-    $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
-    $key = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
-    return strtolower(trim($key, '_'));
+/* 1)  Incluimos utils.php (misma carpeta) */
+$utils = __DIR__ . '/utils.php';
+if (is_file($utils)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $utils;
+}
+/* 1b)  Fallback por si utils.php no se encontró */
+if (!function_exists('normalizeKey')) {
+    function normalizeKey(string $label): string
+    {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
+        $key   = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
+        $key   = strtolower(trim($key, '_'));
+        if ($key === '') {
+            $replacements = ['%' => 'porcentaje', '#' => 'numero'];
+            $key = $replacements[$label] ?? 'col_' . dechex(crc32($label));
+        }
+        return $key;
+    }
 }
 
-$headers = $_SESSION['headers'];
-$types = $_SESSION['types'];
+/* 2)  Accesos a sesión */
+$headers = $_SESSION['headers'] ?? [];
+$types   = $_SESSION['types']   ?? [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $entry = [];
     foreach ($headers as $col) {
-        $key = normalizeKey($col);
+        $key   = normalizeKey($col);
         $input = trim($_POST[$key] ?? '');
-        if ($types[$key] === 'number' && $input !== '' && !is_numeric($input)) {
-            $error = "El campo '$col' debe ser numérico.";
+
+        /* --- Validaciones rápidas --- */
+        if (($types[$key] ?? '') === 'number' && $input !== '' && !is_numeric($input)) {
+            $err = "El campo '$col' debe ser numérico.";
         }
-        if ($types[$key] === 'date' && $input !== '') {
+        if (($types[$key] ?? '') === 'date' && $input !== '') {
             $d = DateTime::createFromFormat('Y-m-d', $input);
-            if (!$d || $d->format('Y-m-d') !== $input) $error = "El campo '$col' debe tener formato YYYY-MM-DD.";
+            if (!$d || $d->format('Y-m-d') !== $input) {
+                $err = "El campo '$col' debe tener formato YYYY-MM-DD.";
+            }
         }
-        if (isset($error)) {
-            header('Location: agregar_datos.php?error=' . urlencode($error));
+        if (isset($err)) {
+            header('Location: agregar_datos.php?error=' . urlencode($err));
             exit;
         }
         $entry[$key] = $input;
@@ -37,20 +57,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Agregar Datos</title>
     <style>
         :root {
             --primary: #3066be;
-            --bg: #f0f0f0;
-            --white: #fff;
-            --text: #f0f0f0;
+            --bg: #f9f9fb;
+            --surface: #ffffff;
+            --text: #2d2d38;
         }
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             background: var(--bg);
             color: var(--text);
         }
@@ -58,10 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-wrapper {
             max-width: 700px;
             margin: 2rem auto;
-            background: var(--white);
+            background: var(--surface);
             padding: 1.5rem;
             border-radius: .5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgb(0 0 0 / .1);
         }
 
         label {
@@ -81,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         button {
             margin-top: 1rem;
             background: var(--primary);
-            color: var(--white);
+            color: #fff;
             border: none;
             cursor: pointer;
         }
@@ -91,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .error {
-            color: red;
+            color: #e54f6d;
             text-align: center;
         }
     </style>
@@ -100,14 +120,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="form-wrapper">
         <h2>Agregar Datos</h2>
-        <?php if (isset($_GET['error'])): ?><p class="error"><?= htmlspecialchars($_GET['error']) ?></p><?php endif; ?>
+
+        <?php if (isset($_GET['error'])): ?>
+            <p class="error"><?= htmlspecialchars($_GET['error']) ?></p>
+        <?php endif; ?>
+
         <form method="POST">
             <?php foreach ($headers as $col):
-                $key = normalizeKey($col);
+                $key  = normalizeKey($col);
                 $type = $types[$key] ?? 'text';
-                $ph = $type === 'date' ? 'YYYY-MM-DD' : ($type === 'number' ? '1234' : 'Texto libre');
+                $htmlType = $type === 'number' ? 'number' : ($type === 'date' ? 'date' : 'text');
+                $ph   = $type === 'date' ? 'YYYY-MM-DD' : ($type === 'number' ? '1234' : 'Texto libre');
             ?>
-                <label><?= htmlspecialchars($col) ?>:<input type="<?= $type ?>" name="<?= $key ?>" placeholder="<?= $ph ?>"></label>
+                <label><?= htmlspecialchars($col) ?>:
+                    <input type="<?= $htmlType ?>" name="<?= $key ?>" placeholder="<?= $ph ?>">
+                </label>
             <?php endforeach; ?>
             <button type="submit">Guardar y Volver</button>
         </form>
