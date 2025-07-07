@@ -1,0 +1,63 @@
+h2 {
+    margin-bottom: 1rem
+}
+
+table {
+    border-collapse: collapse;
+    /* width: 100%; */
+    /* max-width: 800px; */
+    background: #fff
+}
+
+th,
+td {
+    padding: .55rem 1rem;
+    border: 1px solid #dfe3ee
+}
+
+th {
+    background: #3066be;
+    color: #fff;
+    text-align: left
+}
+
+form {
+    max-width: 800px;
+    margin-top: 2rem;
+    background: #fff;
+    padding: 1rem
+}
+
+label {
+    display: block;
+    margin-top: .8rem
+}
+
+input,
+select {
+    width: 100%;
+    padding: .45rem;
+    border: 1px solid #ccc;
+    border-radius: .3rem
+}
+
+button {
+    margin-top: 1rem;
+    padding: .5rem 1rem;
+    background: #3066be;
+    color: #fff;
+    border: none;
+    border-radius: .3rem;
+    cursor: pointer
+}
+
+button:hover {
+    background: #5680d2
+}
+
+a.back {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #3066be;
+    text-decoration: none
+}

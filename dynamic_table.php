@@ -1,3 +1,4 @@
+<?php include 'sidebar.php'; ?>
 <?php
 session_start();
 
@@ -297,93 +298,96 @@ $types   = &$_SESSION['types'];
 </head>
 
 <body>
-    <header>
-        <h1>Resumen: Obra Social "<?= htmlspecialchars($_GET['obra_social'] ?? 'Sancor') ?>"</h1>
-    </header>
-
-    <!-- ---------------- BARRA DE CONTROLES ----------------- -->
-    <div class="controls">
-        <!-- botón de regreso -->
-        <div class="group">
-            <a href="obras_sociales.php" class="secondary">← Volver al listado</a>
+    <main>
+        <header>
+            <h1>Resumen: Obra Social "<?= htmlspecialchars($_GET['obra_social'] ?? 'Sancor') ?>"</h1>
+        </header>
+    
+        <!-- ---------------- BARRA DE CONTROLES ----------------- -->
+        <div class="controls">
+            <!-- botón de regreso -->
+            <div class="group">
+                <a href="obras_sociales.php" class="secondary">← Volver al listado</a>
+            </div>
+    
+            <div class="group">
+                <a href="agregar_datos.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Agregar Datos</a>
+                <a href="modificar_tabla.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Configurar Tabla</a>
+            </div>
+    
+            <div class="group">
+                <button id="openImport">Importar Excel</button>
+                <a href="export_excel.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>" class="secondary">Exportar Excel</a>
+            </div>
+    
+            <div class="group">
+                <button id="approveBtn" <?= $btnApproveDisabled ?>>Enviar para Aprobación</button>
+                <button id="sendResumenBtn" <?= $btnResumenDisabled ?>>Enviar Resumen</button>
+            </div>
         </div>
-
-        <div class="group">
-            <a href="agregar_datos.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Agregar Datos</a>
-            <a href="modificar_tabla.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Configurar Tabla</a>
-        </div>
-
-        <div class="group">
-            <button id="openImport">Importar Excel</button>
-            <a href="export_excel.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>" class="secondary">Exportar Excel</a>
-        </div>
-
-        <div class="group">
-            <button id="approveBtn" <?= $btnApproveDisabled ?>>Enviar para Aprobación</button>
-            <button id="sendResumenBtn" <?= $btnResumenDisabled ?>>Enviar Resumen</button>
-        </div>
-    </div>
-
-
-    <!-- ---------------- TABLA ------------------------------- -->
-    <div class="container">
-        <table>
-            <thead>
-                <tr>
-                    <?php foreach ($headers as $col): ?>
-                        <th><?= htmlspecialchars($col) ?></th>
-                    <?php endforeach; ?>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!$data): ?>
+    
+    
+        <!-- ---------------- TABLA ------------------------------- -->
+        <div class="container">
+            <table>
+                <thead>
                     <tr>
-                        <td colspan="<?= count($headers) + 1 ?>" style="text-align:center">No hay datos.</td>
+                        <?php foreach ($headers as $col): ?>
+                            <th><?= htmlspecialchars($col) ?></th>
+                        <?php endforeach; ?>
+                        <th>Acciones</th>
                     </tr>
-                    <?php else: foreach ($data as $i => $fila): ?>
+                </thead>
+                <tbody>
+                    <?php if (!$data): ?>
                         <tr>
-                            <?php foreach ($headers as $col):
-                                $key = normalizeKey($col);
-                                $val = $fila[$key] ?? '';
-                                if ($types[$key] === 'date' && $val) {
-                                    $d = DateTime::createFromFormat('Y-m-d', $val);
-                                    $val = $d ? $d->format('d/m/Y') : $val;
-                                } ?>
-                                <td><?= htmlspecialchars($val) ?></td>
-                            <?php endforeach; ?>
-                            <td>
-                                <button class="btn-edit" onclick="location.href='editar_datos.php?index=<?= $i ?>'">Editar</button>
-                                <button class="btn-delete" onclick="if(confirm('¿Eliminar fila?')) location.href='dynamic_table.php?delete_row=<?= $i ?>'">Eliminar</button>
-                            </td>
+                            <td colspan="<?= count($headers) + 1 ?>" style="text-align:center">No hay datos.</td>
                         </tr>
-                <?php endforeach;
-                endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- --------------- MODALES ----------------------------- -->
-    <div id="successModal" class="modal">
-        <div class="modal-content">
-            <p>Enviado, se avisará cuando esté aprobada.</p>
-            <button id="closeModal">Cerrar</button>
+                        <?php else: foreach ($data as $i => $fila): ?>
+                            <tr>
+                                <?php foreach ($headers as $col):
+                                    $key = normalizeKey($col);
+                                    $val = $fila[$key] ?? '';
+                                    if ($types[$key] === 'date' && $val) {
+                                        $d = DateTime::createFromFormat('Y-m-d', $val);
+                                        $val = $d ? $d->format('d/m/Y') : $val;
+                                    } ?>
+                                    <td><?= htmlspecialchars($val) ?></td>
+                                <?php endforeach; ?>
+                                <td>
+                                    <button class="btn-edit" onclick="location.href='editar_datos.php?index=<?= $i ?>'">Editar</button>
+                                    <button class="btn-delete" onclick="if(confirm('¿Eliminar fila?')) location.href='dynamic_table.php?delete_row=<?= $i ?>'">Eliminar</button>
+                                </td>
+                            </tr>
+                    <?php endforeach;
+                    endif; ?>
+                </tbody>
+            </table>
         </div>
-    </div>
-
-    <div id="importModal" class="modal">
-        <div class="modal-content">
-            <h3>Importar datos desde Excel</h3>
-            <form id="importForm" action="import_excel.php" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="obra_social" value="<?= htmlspecialchars($_GET['obra_social'] ?? '') ?>">
-                <input type="file" name="xlsx" accept=".xlsx,.xls" required>
-                <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:center">
-                    <button type="submit">Subir Archivo</button>
-                    <button type="button" id="cancelImport" class="secondary">Cancelar</button>
-                </div>
-            </form>
+    
+        <!-- --------------- MODALES ----------------------------- -->
+        <div id="successModal" class="modal">
+            <div class="modal-content">
+                <p>Enviado, se avisará cuando esté aprobada.</p>
+                <button id="closeModal">Cerrar</button>
+            </div>
         </div>
-    </div>
+    
+        <div id="importModal" class="modal">
+            <div class="modal-content">
+                <h3>Importar datos desde Excel</h3>
+                <form id="importForm" action="import_excel.php" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="obra_social" value="<?= htmlspecialchars($_GET['obra_social'] ?? '') ?>">
+                    <input type="file" name="xlsx" accept=".xlsx,.xls" required>
+                    <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:center">
+                        <button type="submit">Subir Archivo</button>
+                        <button type="button" id="cancelImport" class="secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
 
     <!-- --------------- JS ---------------------------------- -->
     <script>

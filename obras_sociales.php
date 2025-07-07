@@ -1,3 +1,4 @@
+<?php include 'sidebar.php'; ?>
 <?php
 session_start();
 $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
@@ -51,7 +52,7 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
             font-size: .95rem;
         }
 
-        main {
+        .main {
             padding: 2rem 1rem;
             display: grid;
             gap: 1rem;
@@ -148,32 +149,35 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
 </head>
 
 <body>
-    <header>
-        <h1>Seleccione la Obra Social</h1>
-    </header>
-
-    <div class="search-bar"><input type="search" id="search" placeholder="Buscar obra social…"></div>
-
     <main>
-        <?php foreach ($obras as $obra): ?>
-            <div class="card" data-obra="<?= htmlspecialchars($obra) ?>">
-                <span><?= htmlspecialchars($obra) ?></span>
-                Cargar resumen
+        <header>
+            <h1>Seleccione la Obra Social</h1>
+        </header>
+    
+        <div class="search-bar"><input type="search" id="search" placeholder="Buscar obra social…"></div>
+    
+        <div class="main">
+            <?php foreach ($obras as $obra): ?>
+                <div class="card" data-obra="<?= htmlspecialchars($obra) ?>">
+                    <span><?= htmlspecialchars($obra) ?></span>
+                    Cargar resumen
+                </div>
+            <?php endforeach; ?>
+        </div>
+    
+        <!-- Modal -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content" id="modalBox">
+                <h3>Acceso</h3>
+                <input type="text" id="user" placeholder="Usuario">
+                <input type="password" id="pass" placeholder="Contraseña">
+                <div class="error-msg" id="err"></div>
+                <button id="loginBtn">Entrar</button>
             </div>
-        <?php endforeach; ?>
+        </div>
     </main>
 
-    <!-- Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content" id="modalBox">
-            <h3>Acceso</h3>
-            <input type="text" id="user" placeholder="Usuario">
-            <input type="password" id="pass" placeholder="Contraseña">
-            <div class="error-msg" id="err"></div>
-            <button id="loginBtn">Entrar</button>
-        </div>
-    </div>
-
+    
     <script>
         /* Buscar */
         const search = document.getElementById('search');
