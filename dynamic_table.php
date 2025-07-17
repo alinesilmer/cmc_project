@@ -1,111 +1,89 @@
 <?php
 session_start();
 
-/* === 1)  Incluimos utils.php con ruta absoluta  =============== */
-$utilsPath = __DIR__ . '/utils.php';
-if (is_file($utilsPath)) {
+/* 1) Shared utilities */
+$utils = __DIR__ . '/utils.php';
+if (is_file($utils)) {
     /** @noinspection PhpIncludeInspection */
-    require_once $utilsPath;
+    require_once $utils;
 }
-
-/* === 2)  Fallback por si utils.php no se encontró ============== */
 if (!function_exists('normalizeKey')) {
     function normalizeKey(string $label): string
     {
         $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $label);
         $key   = preg_replace('/[^A-Za-z0-9]+/', '_', $ascii);
         $key   = strtolower(trim($key, '_'));
-
         if ($key === '') {
-            $replacements = ['%' => 'porcentaje', '#' => 'numero'];
-            $key = $replacements[$label] ?? 'col_' . dechex(crc32($label));
+            $map = ['%' => 'porcentaje', '#' => 'numero'];
+            $key = $map[$label] ?? 'col_' . dechex(crc32($label));
         }
         return $key;
     }
 }
 
-$_SESSION['dirty']     = $_SESSION['dirty']     ?? false;
-$_SESSION['approved']  = $_SESSION['approved']  ?? false;
+/* Capture obra_social */
+$obra = $_GET['obra_social'] ?? '';
 
-/* ---------- clic en Aprobación ---------- */
+/* 2) Seed headers on first load */
+if (empty($_SESSION['headers'])) {
+    $_SESSION['headers'] = ['Doctor', 'Matrícula', 'Fecha', 'Total'];
+    foreach ($_SESSION['headers'] as $lbl) {
+        $k = normalizeKey($lbl);
+        $_SESSION['types'][$k] = $lbl === 'Fecha' ? 'date' : 'text';
+    }
+}
+
+/* 3) Ensure session defaults */
+$_SESSION['table_data'] = $_SESSION['table_data'] ?? [];
+$_SESSION['dirty']      = $_SESSION['dirty']      ?? false;
+$_SESSION['approved']   = $_SESSION['approved']   ?? false;
+
+/* 4) “Enviar para Aprobación” */
 if (isset($_GET['approve'])) {
     $_SESSION['dirty']    = false;
     $_SESSION['approved'] = true;
-    header('Location: dynamic_table.php?sent=1');
+    header('Location: dynamic_table.php?obra_social=' . urlencode($obra) . '&sent=1');
     exit;
 }
 
-$btnApproveDisabled = $_SESSION['dirty']     ? '' : 'disabled';
-$btnResumenDisabled = $_SESSION['approved']  ? '' : 'disabled';
-
-/* -------- CONFIG ---------------- */
-$default_headers = [
-    'Socio',
-    'Nombre Socio',
-    'Matrícula Prov',
-    'Nro. Orden',
-    'Fecha',
-    'Código',
-    'Nro. Afiliado',
-    'Nombre Afiliado',
-    'Cantidad',
-    '%',
-    'Honorarios',
-    'Gastos',
-    'Subtotal'
-];
-
-/* --- 1)  Sincroniza cabeceras por código vs. sesión ------- */
-$headers_hash = md5(json_encode($default_headers));
-if (!isset($_SESSION['headers_hash']) || $_SESSION['headers_hash'] !== $headers_hash) {
-    $_SESSION['headers']      = $default_headers;
-    $_SESSION['headers_hash'] = $headers_hash;
-    $_SESSION['types']        = [];  // fuerza recálculo tipos
-}
-
-/* --- 2)  Tipos de dato por columna ----------------------- */
-foreach ($_SESSION['headers'] as $label) {
-    $key = normalizeKey($label);
-    if (!isset($_SESSION['types'][$key])) {
-        $_SESSION['types'][$key] = ($label === 'Fecha' ? 'date'
-            : ($label === '%'     ? 'number'
-                :  'text'));
-    }
-}
-
-/* --- 3)  Estructuras base -------------------------------- */
-$_SESSION['table_data'] = $_SESSION['table_data'] ?? [];
-$_SESSION['approved']   = $_SESSION['approved']   ?? false;
-
-/* --- 3a) MIGRA filas antiguas con clave "" → "porcentaje" */
-foreach ($_SESSION['table_data'] as &$fila) {
-    if (isset($fila['']) && !isset($fila['porcentaje'])) {
-        $fila['porcentaje'] = $fila[''];
-        unset($fila['']);
-    }
-}
-unset($fila);  // rompe referencia
-
-/* --- 4)  Acciones GET ----------------------------------- */
-if (isset($_GET['approve'])) {
-    $_SESSION['approved'] = true;
-    header('Location: dynamic_table.php');
-    exit;
-}
-
+/* 5) “Eliminar fila” */
 if (isset($_GET['delete_row'])) {
-    $idx = (int)$_GET['delete_row'];
-    if (isset($_SESSION['table_data'][$idx])) {
-        array_splice($_SESSION['table_data'], $idx, 1);
+    $i = (int)$_GET['delete_row'];
+    if (isset($_SESSION['table_data'][$i])) {
+        array_splice($_SESSION['table_data'], $i, 1);
     }
-    header('Location: dynamic_table.php');
+    header('Location: dynamic_table.php?obra_social=' . urlencode($obra));
     exit;
 }
 
-/* --- 5)  Atajos para render ----------------------------- */
-$headers = &$_SESSION['headers'];
-$data    = &$_SESSION['table_data'];
-$types   = &$_SESSION['types'];
+/* 6) “Enviar Resumen” */
+// CORRECT — pull the value from the actual session key for "Matrícula Prov"
+if (isset($_GET['send_resumen'])) {
+    $filtered = [];
+    $kDoc  = normalizeKey('Doctor');        // probably 'doctor'
+    $kMat  = normalizeKey('Matrícula Prov'); // 'matricula_prov'
+    $kF    = normalizeKey('Fecha');         // 'fecha'
+    $kTot  = normalizeKey('Subtotal');      // 'subtotal'
+    foreach ($_SESSION['table_data'] as $r) {
+        $filtered[] = [
+            'Doctor'    => $r[$kDoc]  ?? '',
+            'Matrícula' => $r[$kMat]  ?? '',
+            'Fecha'     => $r[$kF]    ?? '',
+            'Total'     => $r[$kTot]  ?? '',
+        ];
+    }
+    $_SESSION['liquidacion_data'] = $filtered;
+    header('Location: ver_resumen.php?obra_social=' . urlencode($obra));
+    exit;
+}
+
+
+/* 7) Prepare rendering */
+$headers             = $_SESSION['headers'];
+$types               = $_SESSION['types'];
+$data                = $_SESSION['table_data'];
+$btnApproveDisabled  = $_SESSION['dirty']    ? '' : 'disabled';
+$btnResumenDisabled  = $_SESSION['approved'] ? '' : 'disabled';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -114,7 +92,6 @@ $types   = &$_SESSION['types'];
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Resumen Obra Social</title>
-    <!-- ------------- ESTILOS (idénticos a los que ya tenías) -------------- -->
     <style>
         :root {
             --primary: #3066be;
@@ -123,12 +100,13 @@ $types   = &$_SESSION['types'];
             --bg: #f9f9fb;
             --surface: #fff;
             --text: #2d2d38;
-            --text-muted: #555a6f;
             --danger: #e54f6d;
         }
 
-        * {
-            box-sizing: border-box
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
         }
 
         body {
@@ -136,29 +114,27 @@ $types   = &$_SESSION['types'];
             font-family: system-ui, -apple-system, Segoe UI, Roboto;
             background: var(--bg);
             color: var(--text);
-            line-height: 1.45;
         }
 
         header {
             background: var(--primary);
             color: #fff;
-            padding: 1.2rem 1rem;
+            padding: 1.2rem;
             text-align: center;
         }
 
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem 1.2rem;
+            gap: 1rem;
             justify-content: center;
-            padding: 1rem;
             background: var(--surface);
+            padding: 1rem;
         }
 
         .controls .group {
             display: flex;
             gap: .6rem;
-            flex-wrap: wrap
         }
 
         .controls a,
@@ -168,36 +144,30 @@ $types   = &$_SESSION['types'];
             border: none;
             padding: .55rem 1rem;
             border-radius: .55rem;
-            font-size: .88rem;
-            text-decoration: none;
             cursor: pointer;
-            transition: background .25s, box-shadow .25s;
+            text-decoration: none;
+            transition: background .25s;
+            font-size: .9rem;
         }
 
-        .controls a:hover,
-        .controls button:hover:not(:disabled) {
+        .controls a.secondary {
             background: var(--primary-light);
             color: var(--primary);
         }
 
         .controls button:disabled {
             background: #d4d9e8;
-            color: var(--text-muted);
+            color: #999;
             cursor: not-allowed;
         }
 
-        .secondary {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-
         .container {
-            max-width: 1300px;
-            margin: 1.6rem auto;
+            max-width: 1100px;
+            margin: 2rem auto;
             background: var(--surface);
-            padding: 1.2rem;
+            padding: 1.5rem;
             border-radius: .75rem;
-            box-shadow: 0 2px 8px rgb(0 0 0 / .06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             overflow-x: auto;
         }
 
@@ -205,7 +175,7 @@ $types   = &$_SESSION['types'];
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: .78rem;
+            font-size: .9rem;
         }
 
         thead {
@@ -217,14 +187,9 @@ $types   = &$_SESSION['types'];
 
         th,
         td {
-            padding: .65rem .75rem;
+            padding: .7rem .8rem;
             border: 1px solid #e0e0e6;
             text-align: left;
-        }
-
-        th:not(:last-child),
-        td:not(:last-child) {
-            border-right: 2px solid #dfe4f5;
         }
 
         tbody tr:nth-child(even) {
@@ -237,26 +202,24 @@ $types   = &$_SESSION['types'];
 
         .btn-edit {
             background: var(--accent);
-            color: #000
-        }
-
-        .btn-edit:hover {
-            background: #ffe39c
+            color: #000;
         }
 
         .btn-delete {
             background: var(--danger);
-            color: #fff
+            color: #fff;
         }
 
+        .btn-edit:hover,
         .btn-delete:hover {
-            background: #ff7689
+            opacity: .9;
         }
 
+        /* Modal base */
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .45);
+            background: rgba(0, 0, 0, 0.45);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -267,7 +230,7 @@ $types   = &$_SESSION['types'];
 
         .modal.active {
             opacity: 1;
-            pointer-events: auto
+            pointer-events: auto;
         }
 
         .modal-content {
@@ -275,13 +238,13 @@ $types   = &$_SESSION['types'];
             padding: 1.4rem;
             border-radius: .6rem;
             text-align: center;
-            max-width: 320px;
+            max-width: 380px;
             width: calc(100% - 2rem);
-            box-shadow: 0 4px 16px rgb(0 0 0 / .12);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
 
-        #importModal .modal-content {
-            max-width: 380px
+        .modal-content h3 {
+            margin-top: 0;
         }
 
         .modal-content button {
@@ -293,39 +256,39 @@ $types   = &$_SESSION['types'];
             border-radius: .55rem;
             cursor: pointer;
         }
+
+        .modal-content .secondary {
+            background: var(--primary-light);
+            color: var(--primary);
+            margin-left: .5rem;
+        }
     </style>
 </head>
 
 <body>
+
     <header>
-        <h1>Resumen: Obra Social "<?= htmlspecialchars($_GET['obra_social'] ?? 'Sancor') ?>"</h1>
+        <h1>Resumen: Obra Social “<?= htmlspecialchars($obra) ?>”</h1>
     </header>
 
-    <!-- ---------------- BARRA DE CONTROLES ----------------- -->
     <div class="controls">
-        <!-- botón de regreso -->
         <div class="group">
-            <a href="obras_sociales.php" class="secondary">← Volver al listado</a>
+            <a href="liquidacion.php" class="secondary">← Volver a Obras Sociales</a>
         </div>
-
         <div class="group">
-            <a href="agregar_datos.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Agregar Datos</a>
-            <a href="modificar_tabla.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>">Configurar Tabla</a>
+            <a href="agregar_datos.php?obra_social=<?= urlencode($obra) ?>">Agregar Datos</a>
+            <a href="modificar_tabla.php?obra_social=<?= urlencode($obra) ?>">Modificar Tabla</a>
         </div>
-
         <div class="group">
             <button id="openImport">Importar Excel</button>
-            <a href="export_excel.php?obra_social=<?= urlencode($_GET['obra_social'] ?? '') ?>" class="secondary">Exportar Excel</a>
+            <a href="export_excel.php?obra_social=<?= urlencode($obra) ?>" class="secondary">Exportar Excel</a>
         </div>
-
         <div class="group">
             <button id="approveBtn" <?= $btnApproveDisabled ?>>Enviar para Aprobación</button>
-            <button id="sendResumenBtn" <?= $btnResumenDisabled ?>>Enviar Resumen</button>
+            <button id="sendResumenBtn">Enviar Resumen</button>
         </div>
     </div>
 
-
-    <!-- ---------------- TABLA ------------------------------- -->
     <div class="container">
         <table>
             <thead>
@@ -337,24 +300,34 @@ $types   = &$_SESSION['types'];
                 </tr>
             </thead>
             <tbody>
-                <?php if (!$data): ?>
+                <?php if (empty($data)): ?>
                     <tr>
-                        <td colspan="<?= count($headers) + 1 ?>" style="text-align:center">No hay datos.</td>
+                        <td colspan="<?= count($headers) + 1 ?>" style="text-align:center">
+                            No hay datos.
+                        </td>
                     </tr>
-                    <?php else: foreach ($data as $i => $fila): ?>
+                    <?php else: foreach ($data as $i => $r): ?>
                         <tr>
                             <?php foreach ($headers as $col):
-                                $key = normalizeKey($col);
-                                $val = $fila[$key] ?? '';
-                                if ($types[$key] === 'date' && $val) {
-                                    $d = DateTime::createFromFormat('Y-m-d', $val);
-                                    $val = $d ? $d->format('d/m/Y') : $val;
-                                } ?>
-                                <td><?= htmlspecialchars($val) ?></td>
+                                $k = normalizeKey($col);
+                                $v = $r[$k] ?? '';
+                                if ($types[$k] === 'date' && $v) {
+                                    $d = DateTime::createFromFormat('Y-m-d', $v);
+                                    $v = $d ? $d->format('d/m/Y') : $v;
+                                }
+                            ?>
+                                <td><?= htmlspecialchars($v) ?></td>
                             <?php endforeach; ?>
                             <td>
-                                <button class="btn-edit" onclick="location.href='editar_datos.php?index=<?= $i ?>'">Editar</button>
-                                <button class="btn-delete" onclick="if(confirm('¿Eliminar fila?')) location.href='dynamic_table.php?delete_row=<?= $i ?>'">Eliminar</button>
+                                <button class="btn-edit"
+                                    onclick="location.href='editar_datos.php?obra_social=<?= urlencode($obra) ?>&index=<?= $i ?>'">
+                                    Editar
+                                </button>
+                                <button class="btn-delete"
+                                    onclick="if(confirm('¿Eliminar fila?'))
+                  location.href='dynamic_table.php?obra_social=<?= urlencode($obra) ?>&delete_row=<?= $i ?>'">
+                                    Eliminar
+                                </button>
                             </td>
                         </tr>
                 <?php endforeach;
@@ -363,19 +336,20 @@ $types   = &$_SESSION['types'];
         </table>
     </div>
 
-    <!-- --------------- MODALES ----------------------------- -->
+    <!-- Success Modal -->
     <div id="successModal" class="modal">
         <div class="modal-content">
-            <p>Enviado, se avisará cuando esté aprobada.</p>
+            <p>Enviado para aprobación. Se le notificará cuando esté aprobada.</p>
             <button id="closeModal">Cerrar</button>
         </div>
     </div>
 
+    <!-- Import Modal -->
     <div id="importModal" class="modal">
         <div class="modal-content">
-            <h3>Importar datos desde Excel</h3>
+            <h3>Importar Excel</h3>
             <form id="importForm" action="import_excel.php" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="obra_social" value="<?= htmlspecialchars($_GET['obra_social'] ?? '') ?>">
+                <input type="hidden" name="obra_social" value="<?= htmlspecialchars($obra) ?>">
                 <input type="file" name="xlsx" accept=".xlsx,.xls" required>
                 <div style="margin-top:1rem;display:flex;gap:.6rem;justify-content:center">
                     <button type="submit">Subir Archivo</button>
@@ -385,32 +359,37 @@ $types   = &$_SESSION['types'];
         </div>
     </div>
 
-    <!-- --------------- JS ---------------------------------- -->
     <script>
         const params = new URLSearchParams(window.location.search);
 
+        // Approve
         document.getElementById('approveBtn').onclick = () => {
-            if (document.getElementById('approveBtn').disabled) return;
-            const obra = params.get('obra_social') || '';
-            location.href = `dynamic_table.php?obra_social=${encodeURIComponent(obra)}&approve=1`;
+            if (!params.has('obra_social')) return;
+            location.href = `dynamic_table.php?obra_social=${encodeURIComponent(params.get('obra_social'))}&approve=1`;
         };
 
-        /* mostrar modal si acabamos de aprobar */
+        // Show success modal after approval
         if (params.has('sent')) {
             document.getElementById('successModal').classList.add('active');
         }
-
-        /* cerrar modal y limpiar ?sent de la url */
         document.getElementById('closeModal').onclick = () => {
             document.getElementById('successModal').classList.remove('active');
             params.delete('sent');
-            history.replaceState(null, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
+            history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params.toString() : ''));
         };
 
-        /* Import modal */
+        // Import modal
         document.getElementById('openImport').onclick = () => document.getElementById('importModal').classList.add('active');
         document.getElementById('cancelImport').onclick = () => document.getElementById('importModal').classList.remove('active');
-        document.getElementById('importForm').addEventListener('submit', () => document.getElementById('importModal').classList.remove('active'));
+        document.getElementById('importForm').addEventListener('submit', () => {
+            document.getElementById('importModal').classList.remove('active');
+        });
+
+        // Send Resumen
+        document.getElementById('sendResumenBtn').onclick = () => {
+            if (!params.has('obra_social')) return;
+            location.href = `dynamic_table.php?obra_social=${encodeURIComponent(params.get('obra_social'))}&send_resumen=1`;
+        };
     </script>
 </body>
 

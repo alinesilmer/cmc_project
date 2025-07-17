@@ -15,65 +15,100 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
             --card-bg: #fff;
             --card-border: #e0e0e6;
             --primary: #3066be;
-            --primary-weak: #e8efff;
             --text: #2d2d38;
             --danger: #e54f6d;
         }
 
-        * {
-            box-sizing: border-box
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto;
             background: var(--bg);
             color: var(--text);
+            min-height: 100vh;
+            display: flex;
         }
 
-        header {
+        .sidebar {
+            width: 200px;
             background: var(--primary);
             color: #fff;
-            padding: 1.2rem;
+            padding: 1rem;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar nav li {
+            margin: 0.75rem 0;
+        }
+
+        .sidebar nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+
+        .content header {
+            background: var(--primary);
+            color: #fff;
+            padding: 1rem;
+            border-radius: 0.5rem;
             text-align: center;
         }
 
         .search-bar {
+            margin: 1rem 0;
             max-width: 420px;
-            margin: 1.5rem auto 0;
         }
 
         .search-bar input {
             width: 100%;
-            padding: .6rem 1rem;
+            padding: 0.6rem 1rem;
             border: 1px solid #cfd4e2;
-            border-radius: .65rem;
-            font-size: .95rem;
+            border-radius: 0.65rem;
+            font-size: 0.95rem;
         }
 
-        main {
-            padding: 2rem 1rem;
+        .cards-container {
+            flex: 1;
             display: grid;
             gap: 1rem;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            max-width: 1100px;
-            margin: auto;
+            margin-top: 1rem;
         }
 
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: .75rem;
+            border-radius: 0.75rem;
             padding: 1.2rem;
             text-align: center;
-            text-decoration: none;
-            color: inherit;
             cursor: pointer;
-            transition: box-shadow .25s, transform .25s;
+            transition: box-shadow 0.25s, transform 0.25s;
         }
 
         .card:hover {
-            box-shadow: 0 4px 12px rgb(0 0 0 / .08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transform: translateY(-2px);
         }
 
@@ -81,7 +116,7 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
             display: block;
             font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: .3rem;
+            margin-bottom: 0.3rem;
             color: var(--primary);
         }
 
@@ -89,29 +124,28 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .45);
+            background: rgba(0, 0, 0, 0.45);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity .25s;
+            transition: opacity 0.25s;
         }
 
         .modal.active {
             opacity: 1;
-            pointer-events: auto
+            pointer-events: auto;
         }
 
         .modal-content {
             background: #fff;
             padding: 1.5rem;
-            border-radius: .7rem;
+            border-radius: 0.7rem;
             width: 100%;
             max-width: 320px;
             text-align: center;
-            box-shadow: 0 4px 16px rgb(0 0 0 / .12);
-            position: relative;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
 
         .modal-content h3 {
@@ -121,18 +155,18 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
 
         .modal-content input {
             width: 100%;
-            margin: .5rem 0;
-            padding: .55rem;
+            margin: 0.5rem 0;
+            padding: 0.55rem;
             border: 1px solid #ccc;
-            border-radius: .4rem;
+            border-radius: 0.4rem;
         }
 
         .modal-content button {
             width: 100%;
             margin-top: 1rem;
-            padding: .6rem;
+            padding: 0.6rem;
             border: none;
-            border-radius: .45rem;
+            border-radius: 0.45rem;
             background: var(--primary);
             color: #fff;
             cursor: pointer;
@@ -140,32 +174,46 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
 
         .error-msg {
             color: var(--danger);
-            font-size: .85rem;
+            font-size: 0.85rem;
             height: 1.1rem;
-            margin-top: .3rem;
+            margin-top: 0.3rem;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <h1>Seleccione la Obra Social</h1>
-    </header>
+    <aside class="sidebar">
+        <h2>Sistema</h2>
+        <nav>
+            <ul>
+                <li><a href="obras_sociales.php">Obras Sociales</a></li>
+                <li><a href="liquidacion.php">Liquidación</a></li>
+            </ul>
+        </nav>
+    </aside>
 
-    <div class="search-bar"><input type="search" id="search" placeholder="Buscar obra social…"></div>
+    <section class="content">
+        <header>
+            <h1>Seleccione la Obra Social</h1>
+        </header>
 
-    <main>
-        <?php foreach ($obras as $obra): ?>
-            <div class="card" data-obra="<?= htmlspecialchars($obra) ?>">
-                <span><?= htmlspecialchars($obra) ?></span>
-                Cargar resumen
-            </div>
-        <?php endforeach; ?>
-    </main>
+        <div class="search-bar">
+            <input type="search" id="search" placeholder="Buscar obra social…">
+        </div>
+
+        <div class="cards-container">
+            <?php foreach ($obras as $obra): ?>
+                <div class="card" data-obra="<?= htmlspecialchars($obra, ENT_QUOTES) ?>">
+                    <span><?= htmlspecialchars($obra, ENT_QUOTES) ?></span>
+                    Cargar resumen
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
 
     <!-- Modal -->
     <div id="loginModal" class="modal">
-        <div class="modal-content" id="modalBox">
+        <div class="modal-content">
             <h3>Acceso</h3>
             <input type="text" id="user" placeholder="Usuario">
             <input type="password" id="pass" placeholder="Contraseña">
@@ -175,50 +223,51 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
     </div>
 
     <script>
-        /* Buscar */
+        // Filtrar obras
         const search = document.getElementById('search');
         const cards = [...document.querySelectorAll('.card')];
-        search.oninput = e => {
+        search.addEventListener('input', e => {
             const q = e.target.value.toLowerCase().trim();
-            cards.forEach(c => c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none');
-        };
+            cards.forEach(c => {
+                c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
 
-        /* Modal */
+        // Control de modal
         const modal = document.getElementById('loginModal');
-        const modalBox = document.getElementById('modalBox');
         const userInp = document.getElementById('user');
         const passInp = document.getElementById('pass');
         const errBox = document.getElementById('err');
         let targetObra = '';
 
         cards.forEach(card => {
-            card.onclick = () => {
+            card.addEventListener('click', () => {
                 targetObra = card.dataset.obra;
-                userInp.value = passInp.value = '';
+                userInp.value = '';
+                passInp.value = '';
                 errBox.textContent = '';
                 modal.classList.add('active');
                 userInp.focus();
-            };
+            });
         });
 
-        document.getElementById('loginBtn').onclick = () => {
-            const u = userInp.value.trim(),
-                p = passInp.value.trim();
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const u = userInp.value.trim();
+            const p = passInp.value.trim();
             if (u === 'admin' && p === '1234') {
                 window.location.href = 'dynamic_table.php?obra_social=' + encodeURIComponent(targetObra);
             } else {
                 errBox.textContent = 'Credenciales inválidas';
             }
-        };
+        });
 
-        /* Cerrar modal */
         const closeModal = () => modal.classList.remove('active');
-        window.onkeydown = e => {
+        window.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeModal();
-        }
-        modal.onclick = e => {
+        });
+        modal.addEventListener('click', e => {
             if (e.target === modal) closeModal();
-        }
+        });
     </script>
 </body>
 
