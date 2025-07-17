@@ -1,3 +1,4 @@
+<?php include 'sidebar.php'; ?>
 <?php
 session_start();
 

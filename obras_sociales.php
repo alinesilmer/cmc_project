@@ -1,3 +1,4 @@
+<?php include 'sidebar.php'; ?>
 <?php
 session_start();
 $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
@@ -89,8 +90,8 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
             font-size: 0.95rem;
         }
 
-        .cards-container {
-            flex: 1;
+        .main {
+            padding: 2rem 1rem;
             display: grid;
             gap: 1rem;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -182,45 +183,34 @@ $obras = ['Sancor', 'MEDIFÉ', 'OSDE', 'IOMA', 'Swiss Medical', 'OSECAC'];
 </head>
 
 <body>
-    <aside class="sidebar">
-        <h2>Sistema</h2>
-        <nav>
-            <ul>
-                <li><a href="obras_sociales.php">Obras Sociales</a></li>
-                <li><a href="liquidacion.php">Liquidación</a></li>
-            </ul>
-        </nav>
-    </aside>
-
-    <section class="content">
+    <main>
         <header>
             <h1>Seleccione la Obra Social</h1>
         </header>
 
-        <div class="search-bar">
-            <input type="search" id="search" placeholder="Buscar obra social…">
-        </div>
+        <div class="search-bar"><input type="search" id="search" placeholder="Buscar obra social…"></div>
 
-        <div class="cards-container">
+        <div class="main">
             <?php foreach ($obras as $obra): ?>
-                <div class="card" data-obra="<?= htmlspecialchars($obra, ENT_QUOTES) ?>">
-                    <span><?= htmlspecialchars($obra, ENT_QUOTES) ?></span>
+                <div class="card" data-obra="<?= htmlspecialchars($obra) ?>">
+                    <span><?= htmlspecialchars($obra) ?></span>
                     Cargar resumen
                 </div>
             <?php endforeach; ?>
         </div>
-    </section>
 
-    <!-- Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <h3>Acceso</h3>
-            <input type="text" id="user" placeholder="Usuario">
-            <input type="password" id="pass" placeholder="Contraseña">
-            <div class="error-msg" id="err"></div>
-            <button id="loginBtn">Entrar</button>
+        <!-- Modal -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content" id="modalBox">
+                <h3>Acceso</h3>
+                <input type="text" id="user" placeholder="Usuario">
+                <input type="password" id="pass" placeholder="Contraseña">
+                <div class="error-msg" id="err"></div>
+                <button id="loginBtn">Entrar</button>
+            </div>
         </div>
-    </div>
+    </main>
+
 
     <script>
         // Filtrar obras
