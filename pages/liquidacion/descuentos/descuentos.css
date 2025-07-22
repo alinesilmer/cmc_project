@@ -1,0 +1,253 @@
+.layout {
+  display: flex;
+  flex-direction: row;
+  min-width: 100%;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2.5rem;
+  background-color: var(--background-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; /* Space between elements */
+  overflow-y: auto;
+}
+
+/* Section Card Styling (for tables/content blocks) */
+.section-card {
+  background-color: var(--surface-white);
+  border-radius: 12px;
+  box-shadow: 0 5px 20px var(--shadow-subtle);
+  overflow: hidden; /* Ensures rounded corners for content */
+  border: 1px solid var(--border-light);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 2rem;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--background-medium); /* Slightly darker header */
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+  margin: 0;
+}
+
+.toggle-section-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-medium);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  padding: 0 2rem; /* Horizontal padding */
+}
+
+.section-content.active {
+  max-height: 1000px; /* Arbitrary large value to allow content to show */
+  padding: 1.5rem 2rem; /* Vertical and horizontal padding when active */
+}
+
+/* Table Styling */
+.table-container {
+  overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate; /* Use separate for rounded corners on cells */
+  border-spacing: 0;
+  font-size: 0.95rem;
+  min-width: 600px; /* Ensure table doesn't get too narrow */
+}
+
+table th,
+table td {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+table th {
+  background-color: var(--background-light);
+  color: var(--text-dark);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+table tbody tr:hover {
+  background-color: var(--primary-blue-light);
+}
+
+/* Actions Cell */
+.actions-cell {
+  white-space: nowrap;
+}
+
+.action-button {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+  margin-right: 0.5rem;
+}
+
+.action-button.generate-btn {
+  background-color: var(--primary-blue);
+  color: var(--surface-white);
+  border: 1px solid var(--primary-blue);
+}
+
+.action-button.generate-btn:hover {
+  background-color: var(--primary-blue-dark);
+  border-color: var(--primary-blue-dark);
+}
+
+.percent-input {
+  width: 70px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border-medium, #ccc);
+  border-radius: 4px;
+}
+
+/* --- spinner dentro del botón “Generar” --- */
+.generate-btn.loading {
+  position: relative;
+  pointer-events: none;
+  /* evita doble clic */
+  color: transparent;
+  /* oculta el texto “Generar” */
+}
+
+.generate-btn.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid transparent;
+  border-top-color: #fff;
+  border-right-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 250px;
+  height: 30vh;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.35s ease-out, fadeOut 0.4s ease-out 3.5s forwards;
+}
+.toast.success {
+  background: var(--primary-blue, #1d9bf0);
+}
+.toast.error {
+  background: #e74c3c;
+}
+.toast .icon {
+  font-size: 1.1rem;
+  line-height: 0;
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .section-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+  }
+
+  .section-content.active {
+    padding: 1rem 1.5rem;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  table th,
+  table td {
+    padding: 0.8rem 1rem;
+  }
+
+  .action-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    margin-right: 0.3rem;
+  }
+}

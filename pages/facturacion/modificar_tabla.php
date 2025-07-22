@@ -199,7 +199,7 @@ $types   = $_SESSION['types'];
 
 <body>
     <div class="wrapper">
-        <a href="dynamic_table.php" class="secondary-link">← Volver a la tabla</a>
+        <a href="/pages/Facturacion/dynamic_table.php" class="secondary-link">← Volver a la tabla</a>
         <h2>Modificar Tabla</h2>
 
         <h3>Columnas Actuales</h3>

@@ -68,5 +68,5 @@ for ($r = 1; $r < count($rows); $r++) {
 
 /* 7)  Redirigimos a la tabla */
 $obra = $_POST['obra_social'] ?? $_GET['obra_social'] ?? '';
-header('Location: dynamic_table.php?obra_social=' . urlencode($obra));
+header('Location: /pages/Facturacion/dynamic_table.php?obra_social=' . urlencode($obra));
 exit;

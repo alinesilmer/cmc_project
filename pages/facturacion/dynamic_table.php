@@ -43,7 +43,7 @@ $_SESSION['approved']   = $_SESSION['approved']   ?? false;
 if (isset($_GET['approve'])) {
     $_SESSION['dirty']    = false;
     $_SESSION['approved'] = true;
-    header('Location: dynamic_table.php?obra_social=' . urlencode($obra) . '&sent=1');
+    header('Location: /pages/Facturacion/dynamic_table.php?obra_social=' . urlencode($obra) . '&sent=1');
     exit;
 }
 
@@ -309,7 +309,7 @@ $btnResumenDisabled  = $_SESSION['approved'] ? '' : 'disabled';
                                     </button>
                                     <button class="btn-delete"
                                         onclick="if(confirm('¿Eliminar fila?'))
-                           location.href='dynamic_table.php?delete_row=<?= $i ?>'">
+                           location.href='/pages/Facturacion/dynamic_table.php?delete_row=<?= $i ?>'">
                                         Eliminar
                                     </button>
                                 </td>
@@ -351,7 +351,7 @@ $btnResumenDisabled  = $_SESSION['approved'] ? '' : 'disabled';
         // Approve
         document.getElementById('approveBtn').onclick = () => {
             if (!params.has('obra_social')) return;
-            location.href = `dynamic_table.php?obra_social=${encodeURIComponent(params.get('obra_social'))}&approve=1`;
+            location.href = `/pages/Facturacion/dynamic_table.php?obra_social=${encodeURIComponent(params.get('obra_social'))}&approve=1`;
         };
 
         // Show success modal after approval
@@ -374,7 +374,7 @@ $btnResumenDisabled  = $_SESSION['approved'] ? '' : 'disabled';
         // Send Resumen
         document.getElementById('sendResumenBtn').onclick = () => {
             if (!params.has('obra_social')) return;
-            location.href = `dynamic_table.php?obra_social=${encodeURIComponent(params.get('obra_social'))}&send_resumen=1`;
+            location.href = `/pages/Facturacion/dynamic_table.php?obra_social=${encodeURIComponent(params.get('obra_social'))}&send_resumen=1`;
         };
     </script>
 </body>

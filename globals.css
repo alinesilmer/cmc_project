@@ -1,0 +1,55 @@
+:root {
+  /* Primary Colors */
+  --primary-blue: #3066be; /* A strong, professional blue */
+  --primary-blue-light: #e6f0ff; /* Light background for active states */
+  --primary-blue-dark: #255099; /* Darker shade for hover/active text */
+
+  /* Neutral Colors */
+  --background-light: #f8f9fa; /* Very light grey for main backgrounds */
+  --background-medium: #f0f2f5; /* Slightly darker background for sections */
+  --surface-white: #ffffff; /* White for cards, modals, sidebar */
+  --text-dark: #343a40; /* Dark grey for primary text */
+  --text-medium: #6c757d; /* Medium grey for secondary text */
+  --text-light: #adb5bd; /* Light grey for placeholders, subtle elements */
+  --border-light: #dee2e6; /* Light grey for borders */
+  --shadow-subtle: rgba(0, 0, 0, 0.05); /* Very subtle shadow */
+  --shadow-medium: rgba(0, 0, 0, 0.1); /* Medium shadow for cards */
+
+  /* Feedback Colors */
+  --danger: #dc3545; /* Red for errors/danger */
+  --success: #28a745; /* Green for success */
+  --warning: #ffc107; /* Yellow for warnings */
+}
+
+/* Basic Reset/Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 90.5%;
+}
+
+body {
+  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
+  background: #f5f7fb;
+  display: flex;
+  line-height: 1.6;
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* General link styling */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: none;
+}

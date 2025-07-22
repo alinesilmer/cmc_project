@@ -50,7 +50,7 @@
 <body>
     <div class="landing">
         <h1>Colegio Médico de Corrientes</h1>
-        <button class="enter-btn" onclick="location.href='dashboard.php'">
+        <button class="enter-btn" onclick="location.href='pages/Navegacion/dashboard.php'">
             Ingresar al sistema
         </button>
     </div>

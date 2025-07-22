@@ -28,7 +28,7 @@ $index = isset($_GET['index']) ? (int)$_GET['index'] : null;
 
 /* Validate index */
 if ($index === null || !isset($_SESSION['table_data'][$index])) {
-    header('Location: dynamic_table.php?obra_social=' . urlencode($obra));
+    header('Location: /pages/Facturacion/dynamic_table.php?obra_social=' . urlencode($obra));
     exit;
 }
 
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $key = normalizeKey($col);
         $_SESSION['table_data'][$index][$key] = trim($_POST[$key] ?? '');
     }
-    header('Location: dynamic_table.php?obra_social=' . urlencode($obra));
+    header('Location: /pages/Facturacion/dynamic_table.php.php?obra_social=' . urlencode($obra));
     exit;
 }
 

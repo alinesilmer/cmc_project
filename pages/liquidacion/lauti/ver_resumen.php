@@ -173,7 +173,7 @@ sort($periodos);
     <nav>
         <h2>Sistema</h2>
         <a href="liquidacion.php">← Volver a Liquidación</a>
-        <a href="dynamic_table.php?obra_social=<?= urlencode($obra) ?>">← Resumen Raw</a>
+        <a href="/pages/Facturacion/dynamic_table.php?obra_social=<?= urlencode($obra) ?>">← Resumen Raw</a>
     </nav>
 
     <main>

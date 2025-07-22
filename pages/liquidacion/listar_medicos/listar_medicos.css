@@ -1,0 +1,200 @@
+.layout {
+  display: flex;
+  flex-direction: row;
+  min-width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2.5rem;
+  background-color: var(--background-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; /* Space between elements */
+  overflow-y: auto;
+}
+
+/* Section Card Styling (for tables/content blocks) */
+.section-card {
+  background-color: var(--surface-white);
+  border-radius: 12px;
+  box-shadow: 0 5px 20px var(--shadow-subtle);
+  overflow: hidden; /* Ensures rounded corners for content */
+  border: 1px solid var(--border-light);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 2rem;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--background-medium); /* Slightly darker header */
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+  margin: 0;
+}
+
+.section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  padding: 0 2rem; /* Horizontal padding */
+}
+
+.section-content.active {
+  max-height: 1000px; /* Arbitrary large value to allow content to show */
+  padding: 1.5rem 2rem; /* Vertical and horizontal padding when active */
+}
+
+/* Inline Search Container for Medicos Table */
+.search-container-inline {
+  position: relative;
+  margin-bottom: 1.5rem; /* Space below search bar */
+  max-width: 320px; /* Limit width as per original */
+}
+
+.search-container-inline input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-dark);
+  background-color: var(--background-medium);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-container-inline input::placeholder {
+  color: var(--text-light);
+}
+
+.search-container-inline input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(48, 102, 190, 0.2);
+}
+
+.search-container-inline .search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-medium);
+  font-size: 1.1rem;
+}
+
+/* Table Styling */
+.table-container {
+  overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate; /* Use separate for rounded corners on cells */
+  border-spacing: 0;
+  font-size: 0.95rem;
+  min-width: 700px; /* Ensure table doesn't get too narrow */
+}
+
+table th,
+table td {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+table th {
+  background-color: var(--background-light); /* Light background for headers */
+  color: var(--text-dark);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  position: sticky; /* Sticky headers for scrolling tables */
+  top: 0;
+  z-index: 1;
+}
+
+table tbody tr:last-child td {
+  border-bottom: none; /* No border on the last row */
+}
+
+table tbody tr:hover {
+  background-color: var(--primary-blue-light); /* Light blue hover effect */
+}
+
+/* Actions Cell */
+.actions-cell {
+  white-space: nowrap; /* Prevent actions from wrapping */
+}
+
+.view-discounts-btn,
+.action-button {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+  margin-right: 0.5rem; /* Space between actions */
+}
+
+.view-discounts-btn {
+  /* General action link style */
+  background-color: var(--primary-blue-light);
+  color: var(--primary-blue);
+  border: 1px solid var(--primary-blue-light);
+}
+
+.view-discounts-btn:hover {
+  background-color: var(--primary-blue);
+  color: var(--surface-white);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .section-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+  }
+
+  .section-content.active {
+    padding: 1rem 1.5rem;
+  }
+
+  .search-container-inline {
+    max-width: 100%;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  table th,
+  table td {
+    padding: 0.8rem 1rem;
+  }
+
+  .action-link,
+  .action-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    margin-right: 0.3rem;
+  }
+}
