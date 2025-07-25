@@ -7,13 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Períodos de Liquidación</title>
     <link href="../../../globals.css" rel="stylesheet">
-    <link href="../../navegacion/sidebar/sidebar.css" rel="stylesheet">
+    <link href="../sidebar/sidebar.css" rel="stylesheet">
     <link href="./periodo.css" rel="stylesheet">
 </head>
 
 <body>
     <div class="layout">
-        <?php include '../../navegacion/sidebar/sidebar.php'; ?>
+        <?php include '../sidebar/sidebar.php'; ?>
         <div class="main-content">
             <div class="top-bar">
                 <div class="search-container">
@@ -36,7 +36,6 @@
             </div>
 
             <?php
-            // Sample data for liquidation periods
             $periods = [
 
                 [
@@ -109,8 +108,9 @@
                                         <td><?= htmlspecialchars($period['total_neto']) ?></td>
                                         <td><span class="status-badge status-<?= strtolower(str_replace(' ', '-', $period['estado'])) ?>"><?= htmlspecialchars($period['estado']) ?></span></td>
                                         <td class="actions-cell">
-                                            <a href="../../liquidacion/lista_debitos/lista_debitos.php" class="action-link view-detail">Ver</a>
+                                            <a href="../lista_debitos/lista_debitos.php" class="action-link view-detail">Ver</a>
                                             <button class="action-button export-item">Exportar</button>
+                                            <button class="action-button reopen-item">Re-abrir</button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -130,7 +130,7 @@
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
             tableRows.forEach(row => {
-                const periodText = row.cells[0].textContent.toLowerCase(); // Assuming period is in the first column
+                const periodText = row.cells[0].textContent.toLowerCase();
                 if (periodText.includes(query)) {
                     row.style.display = '';
                 } else {
@@ -158,9 +158,9 @@
                 e.target.classList.add('active');
                 statusDropdownMenu.classList.remove('active');
 
-                // Filter table rows based on selected status
+
                 tableRows.forEach(row => {
-                    const statusCell = row.cells[4]; // Assuming status is in the 5th column (index 4)
+                    const statusCell = row.cells[4];
                     const rowStatus = statusCell.textContent.trim();
 
                     if (selectedStatus === 'Todos' || rowStatus === selectedStatus) {
@@ -172,7 +172,6 @@
             });
         });
 
-        // Close dropdown if clicked outside
         document.addEventListener('click', (e) => {
             if (!statusDropdownToggle.contains(e.target) && !statusDropdownMenu.contains(e.target)) {
                 statusDropdownMenu.classList.remove('active');

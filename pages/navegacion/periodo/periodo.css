@@ -146,7 +146,7 @@
 
 /* Export All Button */
 .export-all-btn {
-  background-color: var(--primary-blue);
+  background-color: var(--success);
   color: var(--surface-white);
   border: none;
   padding: 0.75rem 1.5rem;
@@ -158,16 +158,15 @@
 }
 
 .export-all-btn:hover {
-  background-color: var(--primary-blue-dark);
+  background-color: #165d26;
   transform: translateY(-1px);
 }
 
-/* Section Card Styling (for tables/content blocks) */
 .section-card {
   background-color: var(--surface-white);
   border-radius: 12px;
   box-shadow: 0 5px 20px var(--shadow-subtle);
-  overflow: hidden; /* Ensures rounded corners for content */
+  overflow: hidden;
   border: 1px solid var(--border-light);
 }
 
@@ -177,7 +176,7 @@
   align-items: center;
   padding: 1.2rem 2rem;
   border-bottom: 1px solid var(--border-light);
-  background-color: var(--background-medium); /* Slightly darker header */
+  background-color: var(--background-medium);
 }
 
 .section-title {
@@ -200,26 +199,26 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-  padding: 0 2rem; /* Horizontal padding */
+  padding: 0 2rem;
 }
 
 .section-content.active {
-  max-height: 1000px; /* Arbitrary large value to allow content to show */
-  padding: 1.5rem 2rem; /* Vertical and horizontal padding when active */
+  max-height: 1000px;
+  padding: 1.5rem 2rem;
 }
 
 /* Table Styling */
 .table-container {
-  overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+  overflow-x: auto;
   width: 100%;
 }
 
 table {
   width: 100%;
-  border-collapse: separate; /* Use separate for rounded corners on cells */
+  border-collapse: separate;
   border-spacing: 0;
   font-size: 0.95rem;
-  min-width: 700px; /* Ensure table doesn't get too narrow */
+  min-width: 700px;
 }
 
 table th,
@@ -261,7 +260,7 @@ table tbody tr:hover {
 }
 
 .status-finalizado {
-  background-color: var(--success);
+  background-color: rgb(21, 21, 21);
 }
 
 .status-en-curso {
@@ -297,12 +296,23 @@ table tbody tr:hover {
 }
 
 .action-button.export-item {
+  background-color: var(--success);
+  color: white;
+  border: 1px solid var(--border-light);
+}
+
+.action-button.export-item:hover {
+  background-color: #1a6d2d;
+  color: white;
+}
+
+.action-button.reopen-item {
   background-color: var(--background-medium);
   color: var(--text-dark);
   border: 1px solid var(--border-light);
 }
 
-.action-button.export-item:hover {
+.action-button.reopen-item:hover {
   background-color: var(--border-light);
   color: var(--primary-blue-dark);
 }

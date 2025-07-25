@@ -1,0 +1,390 @@
+/* =======================
+   CONTADORA – STYLES
+   ======================= */
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--background-light);
+}
+
+.main-content {
+  flex: 1;
+  padding: clamp(2rem, 4vw, 4rem); /* More generous padding */
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem; /* Slightly more space between sections */
+  overflow-y: auto;
+}
+
+/* -------- Section card -------- */
+.section-card {
+  background: var(--surface-white);
+  border: none; /* Rely on shadow for separation */
+  border-radius: 16px; /* Slightly less rounded, more modern */
+  box-shadow: var(--shadow-medium); /* Use new shadow variable */
+  overflow: hidden;
+  animation: fadeIn 0.35s ease;
+}
+
+.section-header {
+  padding: 1.2rem 2rem 1rem; /* Adjusted padding */
+  background: var(--background-medium); /* Softer header background */
+  border-bottom: 1px solid var(--border-light); /* Keep a subtle border */
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.55rem; /* Slightly larger */
+  font-weight: 700;
+  color: var(--text-dark); /* Use dark text for better hierarchy */
+}
+
+.section-content {
+  padding: 1.8rem 2rem 2rem;
+}
+
+/* -------- Form rows -------- */
+.amounts-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Slightly more space */
+}
+
+.amount-row {
+  display: grid;
+  grid-template-columns: 200px 1fr; /* Adjust label width */
+  gap: 1.5rem; /* More horizontal space */
+  align-items: center;
+}
+
+.period-label {
+  font-weight: 600;
+  color: var(--text-medium); /* Softer color */
+}
+
+.money-input {
+  padding: 0.8rem 1rem; /* More comfortable padding */
+  border: 1px solid var(--border-light); /* Use new border color */
+  border-radius: 12px; /* Consistent with other elements */
+  font-size: 1.05rem; /* Slightly larger */
+  transition: all 0.2s ease-in-out; /* Smoother transition */
+  max-width: 280px; /* Allow slightly wider */
+  background: var(--surface-white); /* Explicitly white */
+}
+
+.money-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px var(--focus-ring); /* Use new focus ring color */
+}
+
+.form-actions {
+  margin-top: 1.8rem; /* More space above buttons */
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem; /* Space between buttons */
+}
+
+/* -------- Buttons -------- */
+.btn-primary {
+  padding: 0.8rem 1.6rem; /* More generous padding */
+  border-radius: 12px; /* Consistent with inputs */
+  font-size: 1rem; /* Slightly larger */
+  font-weight: 600; /* Bolder */
+  cursor: pointer;
+  border: none; /* Rely on background color */
+  background: var(--primary-blue);
+  color: var(--surface-white);
+  box-shadow: 0 8px 20px rgba(52, 112, 212, 0.25); /* More pronounced, but soft shadow */
+  transition: all 0.2s ease-in-out; /* Smoother transition */
+}
+
+.btn-primary:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-3px); /* More lift */
+  box-shadow: 0 12px 28px rgba(52, 112, 212, 0.35); /* Larger shadow on hover */
+}
+
+.btn-primary:active {
+  transform: translateY(0); /* Subtle press effect */
+  box-shadow: 0 4px 10px rgba(52, 112, 212, 0.2);
+}
+
+.btn-secondary {
+  padding: 0.8rem 1.6rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-medium);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+  background: var(--background-medium);
+  color: var(--text-dark);
+  border-color: var(--background-medium);
+}
+
+/* -------- Alert -------- */
+.alert {
+  padding: 1.2rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.alert.success {
+  background: var(--light-green-bg);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.alert.error {
+  background: #fdeded; /* Light red background */
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+/* -------- Toast -------- */
+.toast-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1400;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem; /* Slightly more space */
+  align-items: center;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 280px; /* Slightly wider */
+  max-width: 90vw;
+  padding: 1rem 1.5rem; /* More comfortable padding */
+  border-radius: 16px; /* More rounded */
+  font-size: 1rem;
+  color: #fff;
+  box-shadow: var(--shadow-strong); /* Stronger shadow for toasts */
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  animation: popCenter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    fadeOut 0.4s ease 3.5s forwards; /* Bouncier pop */
+}
+
+.toast.success {
+  background: var(--primary-blue); /* Keep blue for success, nice brand color */
+}
+
+.toast.error {
+  background: var(--danger);
+}
+
+.toast .icon {
+  font-size: 1.2rem; /* Slightly larger icon */
+  line-height: 0;
+}
+
+@keyframes popCenter {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95); /* More subtle fade out */
+  }
+}
+
+/* -------- Utils -------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* More subtle fade in */
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* -------- Responsive -------- */
+@media (max-width: 768px) {
+  .amount-row {
+    grid-template-columns: 1fr;
+  }
+  .money-input {
+    max-width: 100%;
+  }
+}
+
+/* ---------- selector + resumen ---------- */
+.period-switcher {
+  display: grid;
+  gap: 1.8rem; /* Slightly more space */
+  max-width: 480px; /* Slightly wider */
+  margin-inline: auto;
+}
+
+#periodSelect {
+  width: 100%;
+  padding: 0.9rem 1.2rem; /* More comfortable padding */
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  font-size: 1.05rem;
+  background: var(--surface-white)
+    url("data:image/svg+xml,%3Csvg%20fill='%237f8c8d'%20height='24'%20viewBox='0%200%2024%2024'%20width='24'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M7%2010l5%205%205-5z'/%3E%3C/svg%3E")
+    no-repeat right 1rem center / 16px; /* Adjusted icon color and size */
+  appearance: none;
+  transition: all 0.2s ease-in-out;
+}
+
+#periodSelect:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.resumen-card {
+  background: var(--surface-white);
+  border: none; /* Rely on shadow */
+  border-radius: 20px;
+  box-shadow: var(--shadow-medium);
+  padding: 2.5rem 2.2rem 2.8rem; /* More generous padding */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* More space */
+  animation: fadeIn 0.4s ease;
+}
+
+.resumen-card h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-medium);
+  font-weight: 600;
+}
+
+.big-amount {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 3.5rem); /* Even bigger */
+  font-weight: 800;
+  color: var(--primary-blue);
+}
+
+/* ---------- modal tweaks ---------- */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6); /* Darker, more opaque */
+  backdrop-filter: blur(4px); /* Subtle blur effect */
+}
+
+.modal-window {
+  width: min(400px, 90%); /* Slightly wider */
+  padding: 2.5rem 2rem 2rem; /* More padding */
+  background: var(--surface-white);
+  border-radius: 20px;
+  box-shadow: var(--shadow-strong); /* Stronger shadow for modal */
+  position: relative;
+  z-index: 10;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease-in-out;
+}
+
+.modal-close:hover {
+  background: var(--background-medium);
+  color: var(--text-dark);
+}
+
+.modal-title {
+  margin: 0 0 0.8rem;
+  font-size: 1.6rem;
+  color: var(--text-dark); /* Primary text color */
+}
+
+.modal-subtitle {
+  margin: 0 0 1.8rem;
+  color: var(--text-medium);
+  font-size: 1.05rem;
+}
+
+.modal-label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  font-size: 1.05rem;
+  background: var(
+    --background-light
+  ); /* Slightly off-white for input background */
+  transition: all 0.2s ease-in-out;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.modal-actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* responsive */
+@media (max-width: 480px) {
+  .period-switcher {
+    max-width: 100%;
+    padding-inline: 0.4rem;
+  }
+}

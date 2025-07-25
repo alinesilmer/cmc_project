@@ -7,13 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Médicos</title>
     <link href="../../../globals.css" rel="stylesheet">
-    <link href="../../navegacion/sidebar/sidebar.css" rel="stylesheet">
+    <link href="../sidebar/sidebar.css" rel="stylesheet">
     <link href="./listar_medicos.css" rel="stylesheet">
 </head>
 
 <body>
     <div class="layout">
-        <?php include '../../navegacion/sidebar/sidebar.php'; ?>
+        <?php include '../sidebar/sidebar.php'; ?>
 
         <div class="main-content">
             <?php

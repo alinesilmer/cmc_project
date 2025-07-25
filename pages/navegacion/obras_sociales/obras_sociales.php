@@ -103,7 +103,7 @@ function obra_slug(string $nombre): string
             const u = userInp.value.trim();
             const p = passInp.value.trim();
             if (u === 'admin' && p === '1234') {
-                window.location.href = '/pages/Facturacion/dynamic_table.php?obra_social=' + encodeURIComponent(targetObra);
+                window.location.href = '../form_debitos/form_debitos.php';
             } else {
                 errBox.textContent = 'Credenciales inválidas';
             }

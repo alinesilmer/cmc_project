@@ -1,24 +1,36 @@
+/* =======================
+   GLOBAL STYLES & VARIABLES
+   ======================= */
+
 :root {
   /* Primary Colors */
-  --primary-blue: #3066be; /* A strong, professional blue */
-  --primary-blue-light: #e6f0ff; /* Light background for active states */
-  --primary-blue-dark: #255099; /* Darker shade for hover/active text */
+  --primary-blue: #3470d4; /* A vibrant, yet professional blue */
+  --primary-blue-light: #eef5ff; /* Very light blue for subtle backgrounds */
+  --primary-blue-dark: #2a5bbd; /* Deeper blue for hover states */
+  --primary-blue-accent: #5a9bff; /* Slightly brighter blue for accents/focus rings */
 
   /* Neutral Colors */
-  --background-light: #f8f9fa; /* Very light grey for main backgrounds */
-  --background-medium: #f0f2f5; /* Slightly darker background for sections */
-  --surface-white: #ffffff; /* White for cards, modals, sidebar */
-  --text-dark: #343a40; /* Dark grey for primary text */
-  --text-medium: #6c757d; /* Medium grey for secondary text */
-  --text-light: #adb5bd; /* Light grey for placeholders, subtle elements */
-  --border-light: #dee2e6; /* Light grey for borders */
-  --shadow-subtle: rgba(0, 0, 0, 0.05); /* Very subtle shadow */
-  --shadow-medium: rgba(0, 0, 0, 0.1); /* Medium shadow for cards */
+  --background-light: #f9fafb; /* Off-white, very subtle light grey */
+  --background-medium: #f2f4f7; /* Soft light grey for section headers */
+  --surface-white: #ffffff; /* Pure white for cards and modals */
+  --text-dark: #2c3e50; /* Dark charcoal for primary text */
+  --text-medium: #7f8c8d; /* Medium grey for secondary text */
+  --text-light: #bdc3c7; /* Light grey for subtle elements/placeholders */
+  --border-light: #e0e6ed; /* Very subtle light grey for borders */
+
+  /* Shadows - more modern, diffused look */
+  --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-medium: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.12); /* For toasts/modals */
 
   /* Feedback Colors */
-  --danger: #dc3545; /* Red for errors/danger */
-  --success: #28a745; /* Green for success */
-  --warning: #ffc107; /* Yellow for warnings */
+  --danger: #e74c3c; /* Red for errors */
+  --success: #2ecc71; /* Green for success */
+  --light-green-bg: #eafaf1; /* Very light green background for success alerts */
+  --warning: #f39c12; /* Orange for warnings */
+
+  /* Focus Ring */
+  --focus-ring: var(--primary-blue-accent);
 }
 
 /* Basic Reset/Base Styles */
@@ -31,12 +43,13 @@
 }
 
 html {
-  font-size: 90.5%;
+  font-size: 100%; /* Use 100% for better accessibility with rem units */
 }
 
 body {
-  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
-  background: #f5f7fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  background: var(--background-light);
   display: flex;
   line-height: 1.6;
   color: var(--text-dark);
