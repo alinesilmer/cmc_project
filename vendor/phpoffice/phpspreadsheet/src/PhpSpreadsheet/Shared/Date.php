@@ -25,18 +25,18 @@ class Date
      * @var string[]
      */
     public static array $monthNames = [
-        'Jan' => 'January',
-        'Feb' => 'February',
-        'Mar' => 'March',
-        'Apr' => 'April',
-        'May' => 'May',
-        'Jun' => 'June',
-        'Jul' => 'July',
-        'Aug' => 'August',
-        'Sep' => 'September',
-        'Oct' => 'October',
-        'Nov' => 'November',
-        'Dec' => 'December',
+        'Jan' => 'Enero',
+        'Feb' => 'Febrero',
+        'Mar' => 'Marzo',
+        'Apr' => 'Abril',
+        'May' => 'Mayo',
+        'Jun' => 'Junio',
+        'Jul' => 'Julio',
+        'Aug' => 'Agosto',
+        'Sep' => 'Septiembre',
+        'Oct' => 'Octubre',
+        'Nov' => 'Noviembre',
+        'Dec' => 'Diciembre',
     ];
 
     /**

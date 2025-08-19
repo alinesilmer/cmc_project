@@ -21,6 +21,7 @@
       <a href="../listar_medicos/listar_medicos.php" class="sub-item">Lista de Médicos</a>
       <a href="../periodo/periodo.php" class="sub-item">Periodo</a>
       <a href="../descuentos/descuentos.php" class="sub-item">Descuentos</a>
+      <a href="../debitos/debitos.php" class="sub-item">Débitos Demo</a>
     </div>
   </nav>
 </aside>

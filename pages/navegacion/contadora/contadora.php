@@ -15,7 +15,7 @@ $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['period'])) {
     $p   = $_POST['period'];
     $raw = preg_replace('/[^0-9.]/', '', $_POST['amount'] ?? '');
-    if ($raw !== '') {
+    if ($raw !== '' && isset($_SESSION['contadora_amounts'][$p])) {
         $_SESSION['contadora_amounts'][$p] = $raw;
         $msg = 'Monto actualizado';
     }
@@ -35,6 +35,7 @@ function money($v)
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Contadora</title>
+
     <link href="../../../globals.css" rel="stylesheet" />
     <link href="../sidebar/sidebar.css" rel="stylesheet" />
     <link href="./contadora.css" rel="stylesheet" />
@@ -43,21 +44,26 @@ function money($v)
 <body>
     <div class="dashboard-container">
         <?php include '../sidebar/sidebar.php'; ?>
+
         <!-- ---------- MAIN ---------- -->
         <main class="main-content">
             <!-- selector + resumen -->
             <div class="period-switcher">
                 <select id="periodSelect">
                     <?php foreach ($amounts as $period => $val): ?>
-                        <option value="<?= htmlspecialchars($period) ?>"><?= htmlspecialchars($period) ?></option>
+                        <option value="<?= htmlspecialchars($period, ENT_QUOTES, 'UTF-8') ?>">
+                            <?= htmlspecialchars($period, ENT_QUOTES, 'UTF-8') ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
+
                 <div id="cardResumen" class="resumen-card">
                     <!-- se llena por JS -->
                 </div>
             </div>
         </main>
     </div>
+
     <!-- ---------- MODAL ---------- -->
     <div id="editModal" class="modal" hidden aria-hidden="true">
         <div class="modal-backdrop"></div>
@@ -65,6 +71,7 @@ function money($v)
             <button class="modal-close" aria-label="Cerrar">×</button>
             <h3 class="modal-title">Editar monto</h3>
             <p id="modalPeriodo" class="modal-subtitle"></p>
+
             <form id="editForm" method="POST" autocomplete="off">
                 <input type="hidden" name="period" id="hiddenPeriod">
                 <label for="amount" class="modal-label">Nuevo monto ($)</label>
@@ -76,12 +83,15 @@ function money($v)
             </form>
         </div>
     </div>
+
     <!-- toast -->
     <div id="toastContainer" class="toast-container"></div>
+
     <script src="../../../utils/sidebarToggle.js"></script>
     <script>
         /* ---------- DATA desde PHP ---------- */
-        const DATA = <?= json_encode($amounts, JSON_NUMERIC_CHECK) ?>;
+        const DATA = <?= json_encode($amounts, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK) ?>;
+
         /* ---------- Utils ---------- */
         const $ = s => document.querySelector(s);
 
@@ -93,12 +103,17 @@ function money($v)
             const t = document.createElement('div');
             t.className = 'toast ' + (ok ? 'success' : 'error');
             t.innerHTML = `<span class="icon">${ok?'✔️':'⚠️'}</span><span>${msg}</span>`;
-            $('#toastContainer').appendChild(t);
-            setTimeout(() => t.remove(), 4000);
+            const cont = $('#toastContainer');
+            if (cont) {
+                cont.appendChild(t);
+                setTimeout(() => t.remove(), 4000);
+            }
         }
+
         /* ---------- Init ---------- */
         document.addEventListener('DOMContentLoaded', () => {
-            initSidebarToggle();
+            if (typeof initSidebarToggle === 'function') initSidebarToggle();
+
             const sel = $('#periodSelect');
             const card = $('#cardResumen');
             const modal = $('#editModal');
@@ -106,41 +121,55 @@ function money($v)
             const hiddenP = $('#hiddenPeriod');
             const subtitle = $('#modalPeriodo');
 
+            if (!sel || !card) return;
+
             function renderCard(p) {
+                const val = DATA[p] ?? 0;
                 card.innerHTML = `
       <h2>${p}</h2>
-      <p class="big-amount">${money(DATA[p])}</p>
+      <p class="big-amount">${money(val)}</p>
       <button class="btn-primary" id="editBtn">Editar</button>
     `;
                 $('#editBtn').onclick = () => openModal(p);
             }
 
             function openModal(period) {
+                if (!modal) return;
                 modal.hidden = false;
                 modal.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
                 subtitle.textContent = period;
                 hiddenP.value = period;
-                amountIn.value = DATA[period];
+                amountIn.value = DATA[period] ?? 0;
                 amountIn.select();
             }
 
             function closeModal() {
+                if (!modal) return;
                 modal.hidden = true;
                 modal.setAttribute('aria-hidden', 'true');
                 document.body.style.overflow = '';
             }
-            sel.onchange = e => renderCard(e.target.value);
+
+            sel.addEventListener('change', e => renderCard(e.target.value));
             renderCard(sel.value);
+
             // modal basic
-            $('.modal-backdrop').onclick = closeModal;
-            $('.modal-close').onclick = closeModal;
-            $('#cancelBtn').onclick = closeModal;
+            const backdrop = modal.querySelector('.modal-backdrop');
+            const closeBtn = modal.querySelector('.modal-close');
+            const cancel = $('#cancelBtn');
+
+            backdrop && (backdrop.onclick = closeModal);
+            closeBtn && (closeBtn.onclick = closeModal);
+            cancel && (cancel.onclick = closeModal);
+
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape' && !modal.hidden) closeModal();
             });
+
             // post-submit toast (viene de PHP)
-            <?php if ($msg): ?> toast('<?= $msg ?>');
+            <?php if ($msg): ?>
+                toast('<?= htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') ?>');
             <?php endif; ?>
         });
     </script>
