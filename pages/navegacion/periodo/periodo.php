@@ -35,6 +35,10 @@
                 </div>
             </div>
 
+            <div class="action-container">
+                <button class="add-period-btn">Agregar Período</button>
+            </div>
+
             <?php
             $periods = [
 

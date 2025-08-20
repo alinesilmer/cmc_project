@@ -93,10 +93,10 @@ function render_section_cards(array $sections): void
         echo '  </div>';
         echo '  <div class="os-period-picker">';
         echo '    <div class="picker-header">';
-        echo '      <h3 class="picker-title"><span class="badge">Periodo</span> Seleccioná un período</h3>';
+        echo '      <h3 class="picker-title"><span class="badge">Periodo</span> Seleccioná uno o varios meses</h3>';
         echo '    </div>';
         echo '    <div class="picker-controls">';
-        echo '      <input type="text" class="period-picker-input" data-os-id="' . $osId . '" placeholder="Elegí una fecha (mes/día/año)" disabled />';
+        echo '      <input type="text" class="period-picker-input" data-os-id="' . $osId . '" placeholder="Elegí mes(es) y año" disabled />';
         echo '    </div>';
         echo '    <div class="selected-periods" data-os-id="' . $osId . '"></div>';
         echo '    <div class="period-label hidden" data-os-id="' . $osId . '"></div>';
@@ -217,7 +217,9 @@ function render_section_cards_col(array $sections): void
     <link href="../../../globals.css" rel="stylesheet" />
     <link href="../sidebar/sidebar.css" rel="stylesheet" />
     <link href="./lista_debitos.css" rel="stylesheet" />
+    <!-- Flatpickr base CSS + MonthSelect CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
 </head>
 
 <body>
@@ -342,8 +344,11 @@ function render_section_cards_col(array $sections): void
     </div>
 
     <script src="../../../utils/sidebarToggle.js"></script>
+    <!-- Flatpickr base + ES locale + MonthSelect plugin (plugin must load AFTER flatpickr) -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             initSidebarToggle();
@@ -369,7 +374,7 @@ function render_section_cards_col(array $sections): void
                     document.getElementById(btn.dataset.target).classList.add('active');
                     // Mostrar SOLO una u otra sección
                     if (btn.dataset.target === 'lista-col') {
-                        bar.classList.add('hidden'); // ocultar barra Liquidar en este tab
+                        bar.classList.add('hidden'); // oculta barra Liquidar en este tab
                     } else {
                         bar.classList.remove('hidden');
                     }
@@ -410,10 +415,10 @@ function render_section_cards_col(array $sections): void
             }
 
             // STATE
-            const osState = {};
+            const osState = {}; // { [osId]: { active: bool, months: Set<"YYYY-MM">, fp: FlatpickrInstance|null } }
             let pendingDeleteOsId = null;
 
-            // PICKER
+            // PICKER OVERLAY
             const picker = document.getElementById('os-picker');
             const pickerClose = document.getElementById('os-picker-close');
             const pickerSearch = document.getElementById('os-picker-search');
@@ -443,7 +448,7 @@ function render_section_cards_col(array $sections): void
             });
             picker.addEventListener('click', e => {
                 if (e.target === picker) {
-                    /* no close on backdrop */
+                    // click fuera del modal: no hacemos nada (mantenemos)
                 }
             });
 
@@ -527,15 +532,17 @@ function render_section_cards_col(array $sections): void
                 row.classList.add('os-block');
             });
 
-            // PER CARD
+            // ===== PER CARD BEHAVIORS (Month/Year + Multi-select + No +1) =====
             function attachPerCardBehaviors(row) {
                 if (row.dataset.bound === '1') return;
                 row.dataset.bound = '1';
                 const card = row.querySelector('.data-card[data-os-id]');
                 const osId = card.dataset.osId;
+
+                // State per OS: multiple months
                 osState[osId] = {
                     active: false,
-                    selected: null,
+                    months: new Set(), // 'YYYY-MM'
                     fp: null
                 };
 
@@ -550,47 +557,87 @@ function render_section_cards_col(array $sections): void
                 const toggleBtn = card.querySelector('.toggle-card-table');
                 const exportLink = card.querySelector('.card-actions a');
 
-                const disableFn = (date) => {
-                    const cutoff = new Date('2025-08-01T00:00:00');
-                    if (date < cutoff) return true;
-                    if (osState[osId].selected) {
-                        const ymSel = osState[osId].selected.slice(0, 7);
-                        const ym = date.toISOString().slice(0, 7);
-                        if (ym === ymSel) return true;
-                    }
-                    return false;
-                };
+                const firstDayFromYm = (ym) => new Date(ym + '-01T00:00:00');
 
-                const buildPicker = (enabled) => {
+                function renderChips() {
+                    chips.innerHTML = '';
+                    const monthsArr = Array.from(osState[osId].months).sort();
+                    monthsArr.forEach(ym => {
+                        const [y, m] = ym.split('-').map(Number);
+                        const date = firstDayFromYm(ym);
+                        const monthName = date.toLocaleDateString('es-AR', {
+                            month: 'long'
+                        }).replace(/^\w/, c => c.toUpperCase());
+                        const chip = document.createElement('span');
+                        chip.className = 'period-chip';
+                        chip.dataset.ym = ym;
+                        chip.innerHTML = `${monthName} ${y} · Período ${m} <button class="chip-close" aria-label="Quitar" title="Quitar" data-remove="${ym}">×</button>`;
+                        chips.appendChild(chip);
+                    });
+
+                    if (monthsArr.length === 0) {
+                        periodLabel.classList.add('hidden');
+                        periodLabel.textContent = '';
+                    } else if (monthsArr.length === 1) {
+                        const [y, m] = monthsArr[0].split('-').map(Number);
+                        periodLabel.textContent = `Período ${m} del ${y}`;
+                        periodLabel.classList.remove('hidden');
+                    } else {
+                        periodLabel.textContent = `Períodos seleccionados: ${monthsArr.length}`;
+                        periodLabel.classList.remove('hidden');
+                    }
+
+                    // Persist for quick reads/debug
+                    card.dataset.monthsJson = JSON.stringify(monthsArr);
+                }
+
+                function buildPicker(enabled) {
                     if (osState[osId].fp) osState[osId].fp.destroy();
+
                     osState[osId].fp = flatpickr(input, {
                         locale: 'es',
-                        dateFormat: 'Y-m-d',
-                        minDate: '2025-08-01',
-                        disable: [disableFn],
+                        // Month-only UI (plugin). We handle multi-select ourselves.
+                        plugins: [
+                            new monthSelectPlugin({
+                                shorthand: true,
+                                dateFormat: 'Y-m', // value
+                                altFormat: 'F Y', // label
+                                theme: 'light'
+                            })
+                        ],
+                        // IMPORTANT: do NOT set mode: 'multiple' (plugin + multiple is buggy)
+                        dateFormat: 'Y-m',
+                        altInput: true,
+                        altInputClass: 'period-picker-input',
                         clickOpens: enabled,
+                        minDate: '2025-08', // ajustá si querés permitir meses anteriores
                         onChange: (selectedDates, dateStr, instance) => {
                             if (!selectedDates.length) return;
-                            const picked = selectedDates[0];
-                            const m = picked.getMonth() + 1;
-                            const payMonth = (m % 12) + 1;
-                            const year = picked.getFullYear();
-                            const ym = picked.toISOString().slice(0, 7);
-                            osState[osId].selected = ym;
+                            // monthSelect returns Date pointing to selected month (1st day)
+                            const pickedDate = selectedDates[0];
+                            const y = pickedDate.getFullYear();
+                            const m = (pickedDate.getMonth() + 1).toString().padStart(2, '0');
+                            const ym = `${y}-${m}`;
+
+                            // Toggle month in Set
+                            if (osState[osId].months.has(ym)) {
+                                osState[osId].months.delete(ym);
+                            } else {
+                                osState[osId].months.add(ym);
+                            }
+                            renderChips();
+
+                            // Clear to allow quick subsequent picks
                             instance.clear();
-                            instance.destroy();
-                            card.querySelector('.picker-controls').classList.add('hidden');
-                            chips.classList.add('hidden');
-                            const monthName = picked.toLocaleDateString('es-AR', {
-                                month: 'long'
-                            }).replace(/^\w/, c => c.toUpperCase());
-                            periodLabel.textContent = 'Período ' + payMonth + ' del ' + year;
-                            periodLabel.classList.remove('hidden');
+                            setTimeout(() => {
+                                if (enabled) instance.open();
+                            }, 0);
                         }
                     });
-                };
-                buildPicker(false);
+                }
+                buildPicker(false); // inactive at first
 
+                // Activar OS
                 addBtn.addEventListener('click', () => {
                     osState[osId].active = true;
                     card.classList.remove('is-inactive');
@@ -604,43 +651,22 @@ function render_section_cards_col(array $sections): void
                     checklistWrap.classList.remove('hidden');
                     delBtn.disabled = false;
 
-                    if (osState[osId].fp) osState[osId].fp.destroy();
-                    osState[osId].fp = flatpickr(input, {
-                        locale: 'es',
-                        dateFormat: 'Y-m-d',
-                        minDate: '2025-08-01',
-                        disable: [(d) => {
-                            const c = new Date('2025-08-01T00:00:00');
-                            if (d < c) return true;
-                            if (osState[osId].selected) {
-                                const a = osState[osId].selected.slice(0, 7),
-                                    b = d.toISOString().slice(0, 7);
-                                if (a === b) return true;
-                            }
-                            return false;
-                        }],
-                        onChange: (selectedDates) => {
-                            if (!selectedDates.length) return;
-                            const picked = selectedDates[0];
-                            const m = picked.getMonth() + 1;
-                            const payMonth = (m % 12) + 1;
-                            const year = picked.getFullYear();
-                            const ym = picked.toISOString().slice(0, 7);
-                            osState[osId].selected = ym;
-                            osState[osId].fp.clear();
-                            osState[osId].fp.destroy();
-                            card.querySelector('.picker-controls').classList.add('hidden');
-                            chips.classList.add('hidden');
-                            const monthName = picked.toLocaleDateString('es-AR', {
-                                month: 'long'
-                            }).replace(/^\w/, c => c.toUpperCase());
-                            periodLabel.textContent = 'Período ' + payMonth + ' del ' + year;;
-                            periodLabel.classList.remove('hidden');
-                        }
-                    });
+                    buildPicker(true);
+                    renderChips();
                 });
 
-                // POPUP ELIMINAR
+                // Quitar mes desde chip
+                chips.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.chip-close');
+                    if (!btn) return;
+                    const ym = btn.dataset.remove;
+                    if (osState[osId].months.has(ym)) {
+                        osState[osId].months.delete(ym);
+                        renderChips();
+                    }
+                });
+
+                // POPUP ELIMINAR (restaura estado)
                 const popup = document.getElementById("popup-confirm");
                 const btnCancel = document.getElementById("popup-cancel");
                 const btnAccept = document.getElementById("popup-accept");
@@ -673,7 +699,7 @@ function render_section_cards_col(array $sections): void
                     const chk = chkWrap.querySelector('.chk-liquidar');
 
                     osState[id].active = false;
-                    osState[id].selected = null;
+                    osState[id].months = new Set();
                     c.classList.add('is-inactive');
 
                     const tableContainer = document.getElementById(`${id}-table`);
@@ -690,15 +716,10 @@ function render_section_cards_col(array $sections): void
                     controls.classList.remove('hidden');
                     c.querySelector('.selected-periods').classList.remove('hidden');
                     pLabel.classList.add('hidden');
+                    pLabel.textContent = '';
 
                     if (osState[id].fp) osState[id].fp.destroy();
-                    osState[id].fp = flatpickr(c.querySelector('.period-picker-input'), {
-                        locale: 'es',
-                        dateFormat: 'Y-m-d',
-                        minDate: '2025-08-01',
-                        disable: [() => true],
-                        clickOpens: false
-                    });
+                    buildPicker(false);
 
                     add.classList.remove('hidden');
                     chkWrap.classList.add('hidden');
@@ -707,6 +728,7 @@ function render_section_cards_col(array $sections): void
                     updateLiquidarSummary();
                 });
 
+                // Mostrar/Ocultar tabla
                 row.querySelector('.toggle-card-table').addEventListener('click', function() {
                     if (this.disabled) return;
                     const tableContainer = document.getElementById(this.dataset.targetTable);
@@ -717,8 +739,10 @@ function render_section_cards_col(array $sections): void
                     }
                 });
 
+                // Check de “Liquidar”
                 checklist.addEventListener('change', updateLiquidarSummary);
             }
+            // ===== END PER CARD =====
 
             // TOTAL
             function parseMoney(txt) {
@@ -772,9 +796,50 @@ function render_section_cards_col(array $sections): void
             payCancel.addEventListener('click', () => {
                 payConfirm.classList.add('hidden');
             });
-            payAccept.addEventListener('click', () => {
+
+            // === Endpoint payload helper ===
+            // Devuelve: [{ osId: 'sancor-card', months: ['2025-08','2025-09'] }, ...]
+            window.getLiquidacionPayload = function() {
+                const result = [];
+                Object.entries(osState).forEach(([osId, st]) => {
+                    if (!st.active) return;
+                    const months = Array.from(st.months).sort();
+                    if (months.length === 0) return;
+                    result.push({
+                        osId,
+                        months
+                    });
+                });
+                return result;
+            };
+
+            payAccept.addEventListener('click', async () => {
                 payConfirm.classList.add('hidden');
-                alert('Liquidación confirmada.');
+
+                const payload = {
+                    items: window.getLiquidacionPayload(),
+                    meta: {
+                        source: 'web-app'
+                    }
+                };
+                console.log('Liquidación payload:', payload);
+
+                // Ejemplo de integración con FastAPI en localhost:8000
+                try {
+                    const res = await fetch('http://localhost:8000/api/liquidaciones', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.ok) throw data;
+                    alert('Liquidación creada con éxito');
+                } catch (e) {
+                    console.error(e);
+                    alert('Error al crear la liquidación');
+                }
             });
         });
     </script>
