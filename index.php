@@ -201,7 +201,7 @@
             <img src="./assets/images/logoCMC.png" alt="logo-cmc">
         </div>
         <h1>Colegio Médico de Corrientes</h1>
-        <p class="subtitle">Portal interno para profesionales. Accede a tu tablero y gestiona tu información rápidamente.</p>
+        <p class="subtitle">Portal interno para profesionales. Accedé a tu tablero y gestioná tu información rápidamente.</p>
 
         <a href="/pages/Navegacion/dashboard/dashboard.php" class="enter-btn" aria-label="Ingresar al sistema">
             Ingresar

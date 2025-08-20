@@ -29,7 +29,7 @@ $msg   = urlencode('¡Hola! Necesito soporte con el sistema.');
             <!-- bienvenida -->
             <section class="welcome-card reveal">
                 <h2 class="title">¡Bienvenido<?php echo isset($_SESSION['nombre']) ? ", " . $_SESSION['nombre'] : ""; ?>!</h2>
-                <p class="subtitle">Elegí una opción del menú lateral o usa los accesos rápidos.</p>
+                <p class="subtitle">Elegí una opción del menú lateral o usá los accesos rápidos.</p>
             </section>
 
             <!-- KPIs -->
